@@ -230,7 +230,11 @@ def train(hparams):
     model = LightningSystem(**dict_args)
     ckpt_path = None
     if hparams.experiment_version is not None:
-        root_path = os.path.join(hparams.log_dir, hparams.experiment_name, f'version_{hparams.experiment_version}')
+        #julie here -- adjusting the code to see if it resolves a syntax error that I'm getting on my end
+        v='version_{}'
+        vrsn=v.format(vrsn)
+        root_path=os.path.join(hparams.log_dir,hparams.experiment_name,vrsn)
+        #root_path = os.path.join(hparams.log_dir, hparams.experiment_name, f'version_{hparams.experiment_version}')
         last_checkpoint = os.path.join(root_path, 'best_model.ckpt')
         if os.path.exists(last_checkpoint):
             ckpt_path = last_checkpoint
