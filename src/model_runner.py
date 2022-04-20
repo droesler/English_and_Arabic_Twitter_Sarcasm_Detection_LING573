@@ -250,7 +250,11 @@ def train(hparams):
         haparams.experiment_version=vrsn
         #hparams.experiment_version = f'version_{logger.version}'
     else:
-        hparams.experiment_version = f'version_{hparams.experiment_version}'
+        #julie -- 
+        v='version_{}'
+        vrsn=v.format(hparams.experiment_version)
+        hparams.experiment_version=vrsn
+        #hparams.experiment_version = f'version_{hparams.experiment_version}'
         logger = TensorBoardLogger(hparams.log_dir, hparams.experiment_name, hparams.experiment_version, default_hp_metric=False)
 
 
