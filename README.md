@@ -1,7 +1,7 @@
 # ling573-2022-spring
 
 
-### Team
+## Team
 
 - Amy Tzu-Yu Chen @amy17519
 - David Roesler @droesler
