@@ -286,7 +286,11 @@ def train(hparams):
 
 
 def score(hparams):
-    root_path = os.path.join(hparams.log_dir, hparams.experiment_name, f'version_{hparams.experiment_version}')
+    #julie 
+    v='version_{}'
+    vrsn=v.format(hparams.experiment_version)
+    root_path=os.path.join(hparams.log_dir,hparams.experiment_name,vrsn)
+    #root_path = os.path.join(hparams.log_dir, hparams.experiment_name, f'version_{hparams.experiment_version}')
     last_checkpoint = os.path.join(root_path, 'best_model.ckpt')
     if not os.path.exists(last_checkpoint):
         raise ValueError(f"Could not load model given dir, name, and version. File does not exist: {last_checkpoint}")
