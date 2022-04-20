@@ -232,7 +232,7 @@ def train(hparams):
     if hparams.experiment_version is not None:
         #julie here -- adjusting the code to see if it resolves a syntax error that I'm getting on my end
         v='version_{}'
-        vrsn=v.format(vrsn)
+        vrsn=v.format(hparams.experiment_version)
         root_path=os.path.join(hparams.log_dir,hparams.experiment_name,vrsn)
         #root_path = os.path.join(hparams.log_dir, hparams.experiment_name, f'version_{hparams.experiment_version}')
         last_checkpoint = os.path.join(root_path, 'best_model.ckpt')
@@ -244,7 +244,11 @@ def train(hparams):
     # These have reversed orders.
     if hparams.experiment_version is None:
         logger = TensorBoardLogger(hparams.log_dir, hparams.experiment_name, hparams.experiment_version, default_hp_metric=False)
-        hparams.experiment_version = f'version_{logger.version}'
+        #julie here again -- 
+        v='version_{}'
+        vrsn=v.format(logger.version)
+        haparams.experiment_version=vrsn
+        #hparams.experiment_version = f'version_{logger.version}'
     else:
         hparams.experiment_version = f'version_{hparams.experiment_version}'
         logger = TensorBoardLogger(hparams.log_dir, hparams.experiment_name, hparams.experiment_version, default_hp_metric=False)
