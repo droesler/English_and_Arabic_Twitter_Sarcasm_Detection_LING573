@@ -332,7 +332,7 @@ def add_score_args(parser):
 def add_model_specific_args(parser):
     parser.add_argument('--warm-restart', action='store_true', help='Use warm restarts')
     parser.add_argument('--track-grad-norm', default=-1, type=int, choices=[-1, 0, 1, 2], help='Log the norm of the parameter gradients')
-    parser.add_argument('--scheduler-freq', default=10, choices=range(0, 501), type=int, help='Number of epochs for cosine annealing.')
+    parser.add_argument('--scheduler-freq', default=10, type=int, help='Number of epochs for cosine annealing.')
     parser.add_argument('--scheduler-mult', default=1, choices=range(1, 6), type=int, help='Multiplier for cosine annealing with warm restarts.')
     parser.add_argument('--learning-rate', default=0.001, type=float, choices=[0.0001, 0.0005, 0.001, 0.005, 0.01])
 
@@ -341,9 +341,9 @@ if __name__ == '__main__':
 
     global_parser = argparse.ArgumentParser(add_help=False)
     add_program_args(global_parser)
-    parser = argparse.ArgumentParser(add_help=False)
+    parser = argparse.ArgumentParser(add_help=True)
 
-    subparser = parser.add_subparsers(dest='subparser_name')
+    subparser = parser.add_subparsers(dest='subparser_name', required=True)
     train_parser = subparser.add_parser('train', parents=[global_parser], add_help=True, help='Build a model from the input file.')
     score_parser = subparser.add_parser('score', parents=[global_parser], add_help=True, help='Score input file using a model.')
     add_train_args(train_parser)
