@@ -231,10 +231,10 @@ def train(hparams):
     ckpt_path = None
     if hparams.experiment_version is not None:
         #julie here -- adjusting the code to see if it resolves a syntax error that I'm getting on my end
-        v='version_{}'
-        vrsn=v.format(hparams.experiment_version)
-        root_path=os.path.join(hparams.log_dir,hparams.experiment_name,vrsn)
-        #root_path = os.path.join(hparams.log_dir, hparams.experiment_name, f'version_{hparams.experiment_version}')
+        #v='version_{}'
+        #vrsn=v.format(hparams.experiment_version)
+        #root_path=os.path.join(hparams.log_dir,hparams.experiment_name,vrsn)
+        root_path = os.path.join(hparams.log_dir, hparams.experiment_name, f'version_{hparams.experiment_version}')
         last_checkpoint = os.path.join(root_path, 'best_model.ckpt')
         if os.path.exists(last_checkpoint):
             ckpt_path = last_checkpoint
@@ -245,16 +245,16 @@ def train(hparams):
     if hparams.experiment_version is None:
         logger = TensorBoardLogger(hparams.log_dir, hparams.experiment_name, hparams.experiment_version, default_hp_metric=False)
         #julie here again -- 
-        v='version_{}'
-        vrsn=v.format(logger.version)
-        haparams.experiment_version=vrsn
-        #hparams.experiment_version = f'version_{logger.version}'
+        #v='version_{}'
+        #vrsn=v.format(logger.version)
+        #haparams.experiment_version=vrsn
+        hparams.experiment_version = f'version_{logger.version}'
     else:
         #julie -- 
-        v='version_{}'
-        vrsn=v.format(hparams.experiment_version)
-        hparams.experiment_version=vrsn
-        #hparams.experiment_version = f'version_{hparams.experiment_version}'
+        #v='version_{}'
+        #vrsn=v.format(hparams.experiment_version)
+        #hparams.experiment_version=vrsn
+        hparams.experiment_version = f'version_{hparams.experiment_version}'
         logger = TensorBoardLogger(hparams.log_dir, hparams.experiment_name, hparams.experiment_version, default_hp_metric=False)
 
 
@@ -287,10 +287,10 @@ def train(hparams):
 
 def score(hparams):
     #julie 
-    v='version_{}'
-    vrsn=v.format(hparams.experiment_version)
-    root_path=os.path.join(hparams.log_dir,hparams.experiment_name,vrsn)
-    #root_path = os.path.join(hparams.log_dir, hparams.experiment_name, f'version_{hparams.experiment_version}')
+    #v='version_{}'
+    #vrsn=v.format(hparams.experiment_version)
+    #root_path=os.path.join(hparams.log_dir,hparams.experiment_name,vrsn)
+    root_path = os.path.join(hparams.log_dir, hparams.experiment_name, f'version_{hparams.experiment_version}')
     last_checkpoint = os.path.join(root_path, 'best_model.ckpt')
     if not os.path.exists(last_checkpoint):
         raise ValueError(f"Could not load model given dir, name, and version. File does not exist: {last_checkpoint}")
