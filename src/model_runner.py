@@ -18,7 +18,6 @@ from torchmetrics import MetricCollection, Accuracy, Precision, Recall, AUROC, F
 from models import BertClassifier, BertSmallClassifier
 
 
-
 class DataRetriever:
     def __init__(self, label_to_classify=None, train_file=None, val_file=None, pred_file=None, random_state = None, train_size=0.8):
         if random_state is None or np.isnan(random_state):
@@ -105,7 +104,6 @@ class LightningSystem(LightningModule):
 
         print('Training Dataset Size: ', len(train_data))
         return DataLoader(train_data, batch_size=batch_size, shuffle=True, pin_memory=True, num_workers=self.num_workers)
-
 
     def val_dataloader(self):
         print('val dataloader called')
@@ -196,7 +194,6 @@ class LightningSystem(LightningModule):
         avg_val_loss = np.mean([output['loss'] for output in outputs])
         self.log('avg_val_loss', avg_val_loss)
         print("Validation END ")
-
 
     def configure_optimizers(self):
         optimizer = AdamW(self.model.parameters(), lr=self.hparams.learning_rate, eps=1e-8,  # Default epsilon value is 1e-6
