@@ -131,8 +131,11 @@ dmypy.json
 # Ignore Mac DS_Store files
 .DS_Store
 
-#Ignore logging folder
+# Ignore logging folder
 .logging
 
-#Ignore IDE settings
+# Ignore IDE settings
 .idea
+
+# Ignore VSCode Setting
+.vscode
