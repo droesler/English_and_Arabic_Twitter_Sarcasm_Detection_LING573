@@ -1,0 +1,18 @@
+name: ling573-2022-spring
+channels:
+  - huggingface
+  - pytorch
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.9
+  - transformers
+  - nb_conda_kernels
+  - matplotlib
+  - ipykernel
+  - tqdm
+  - pandas
+  - torchvision
+  - torchaudio
+  - pytorch
+  - pytorch-lightning>=1.6.1

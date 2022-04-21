@@ -19,7 +19,7 @@ from models import BertClassifier, BertSmallClassifier
 
 
 class DataRetriever:
-    def __init__(self, label_to_classify=None, train_file=None, val_file=None, pred_file=None, random_state = None, train_size=0.8):
+    def __init__(self, label_to_classify=None, train_file=None, val_file=None, pred_file=None, random_state=None, train_size=0.8):
         if random_state is None or np.isnan(random_state):
             random_state = np.random.randint(0, 1e8)
         self.random_state = int(random_state)
@@ -86,7 +86,8 @@ class LightningSystem(LightningModule):
         self.train_metrics = metrics.clone(prefix='train_')
         self.val_metrics = metrics.clone(prefix='val_')
 
-        self.model = BertSmallClassifier()
+        # Get the class constructor from command line options and initialize
+        self.model = globals()[hparams.model_class]()
         self.preprocessor = self.model.get_preprocessor()
 
 
@@ -315,6 +316,7 @@ def add_program_args(parser):
                                help='batch size will be divided over all gpus being used across all nodes.')
     parser.add_argument('--num-workers', default=-1, type=int, help="Num cpu cores to use for Dataloading")
     parser.add_argument('-c', '--config', default=None, type=argparse.FileType('r'), help='Config file for options. Will be overridden by cli flags.')
+    parser.add_argument('--model-class', default='BertSmallClassifier', type=str, help="Name of model class to use for modeling.")
 
 
 def add_train_args(parser):
