@@ -83,5 +83,5 @@ The `--logdir` directory should be the same as the one provided to the `--log-di
 When adding new models to model runner, make sure to do the following:
 1) Add the new model class to models.py
 2) Add a static method to the class called `get_preprocessor` that returns a function to preprocess the input data.
-3) import the new model class in models.py
+3) import the new model class in model_runner.py
 4) If this model differs from other the other Bert models, you may need to change the logic in `train_step`, `val_step`, `predict_step`, and `forward`. In most cases this won't be necessary.
