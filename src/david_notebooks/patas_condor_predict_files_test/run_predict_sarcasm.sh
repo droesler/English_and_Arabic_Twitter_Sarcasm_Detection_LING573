@@ -1,6 +1,6 @@
 #!/bin/sh
 source ~/anaconda3/etc/profile.d/conda.sh
-conda activate 573_env
+conda activate 573
 
 # default
 
