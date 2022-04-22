@@ -4,6 +4,12 @@ Performs model prediction using a saved Pytorch model file.
 The command line for launching the script is:
 predict_sarcasm.sh <validation set file path> <model file filepath> 
 
+On Patas/Dryas these are:
+
+/home2/droesl/573/balanced_validation_En.csv
+/home2/droesl/573/test_model.pth
+
+
 The script outputs the following files:
 model_output.txt - list of probability predictions for each class
 model_results.txt - sklearn classification report containing F1 scores
