@@ -4,5 +4,5 @@ conda activate 573
 
 # default
 
-python predict_sarcasm.py
+python predict_sarcasm.py $1 $2
 

@@ -1,13 +1,16 @@
 """
 Performs model prediction using a saved Pytorch model file.
 
+The command line for launching the script is:
+predict_sarcasm.sh <validation set file path> <model file filepath> 
+
 The script outputs the following files:
 model_output.txt - list of probability predictions for each class
 model_results.txt - sklearn classification report containing F1 scores
 
 """
 
-
+import sys
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -20,8 +23,11 @@ from sklearn.metrics import classification_report
 
 if __name__ == '__main__':
 
+    validation_filepath = sys.argv[1]
+    model_filepath = sys.argv[2]
+
     # read the validation CSV file
-    validation_data = pd.read_csv('/home2/droesl/573/balanced_validation_En.csv')
+    validation_data = pd.read_csv(validation_filepath)
     X_val = validation_data['tweet']
     y_val = validation_data['sarcastic']
 
@@ -148,7 +154,7 @@ if __name__ == '__main__':
         return probs
 
     device = torch.device("cpu")
-    model = torch.load('/home2/droesl/573/test_model.pth', map_location=torch.device('cpu'))
+    model = torch.load(model_filepath, map_location=torch.device('cpu'))
 
     # Compute predicted probabilities on the validation set
     probs = bert_predict(model, val_dataloader)
