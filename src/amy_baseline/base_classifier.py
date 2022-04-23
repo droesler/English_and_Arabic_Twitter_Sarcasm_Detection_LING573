@@ -37,6 +37,6 @@ class SarcasmClassifier():
 
     def get_classification_report(self, y_true, y_pred):
         """ Get classification report """
-        report = classification_report(y_true, y_pred, zero_division=0)
+        report = classification_report(y_true, y_pred, zero_division=0, output_dict=True)
         logger.info(report)
         return report
