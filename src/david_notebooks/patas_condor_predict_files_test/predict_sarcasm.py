@@ -157,20 +157,22 @@ if __name__ == '__main__':
         # Apply softmax to calculate probabilities
         probs = F.softmax(all_logits, dim=1).cpu().numpy()
 
-        return probs
+        all_logits = all_logits.cpu().numpy()
+
+        return probs, all_logits
 
     device = torch.device("cpu")
     model = torch.load(model_filepath, map_location=torch.device('cpu'))
 
     # Compute predicted probabilities on the validation set
-    probs = bert_predict(model, val_dataloader)
+    probs, all_logits = bert_predict(model, val_dataloader)
 
     # Get predictions from the probabilities
     preds = np.argmax(probs, axis = 1)
 
 
     with open("model_output.txt", mode="w", newline="\n", encoding="utf-8") as output_file:
-        output_file.write(np.array2string(probs, precision=2, separator=','))
+        output_file.write(np.array2string(all_logits, precision=7, separator=','))
 
     with open("model_results.txt", mode="w", newline="\n", encoding="utf-8") as results_file:
         results_file.write(classification_report(y_val, preds))
