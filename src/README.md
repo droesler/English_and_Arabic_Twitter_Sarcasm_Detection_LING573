@@ -17,15 +17,23 @@ validation using `--train-size` option as the percent used for training.
 ```
 python src/model_runner.py train data/balanced_train_En.csv --log-dir .logging/ -c runner_config.json
 ```
+
 Train a model on balanced_train_En.csv using options from runner_config.json, logging to ./logging, and using
 the large BertClassifier as the model.
 ```
 python src/model_runner.py train data/balanced_train_En.csv --model-class BertClassifier --log-dir .logging/ -c runner_config.json
 ```
+
+Run testing on *balanced_validation_En.csv* using a previously saved model in *.logging/default/version_1* and save the predictions to *pred_output.csv*
+and metrics to *metrics_output.csv*.
+```
+python src/model_runner.py test data/balanced_validation_En.csv results/pred_output.csv results/metric_output.csv --log-dir .logging/ --experiment-name default --experiment-version 1
+```
+
 Score the dataset balanced_validation_En.csv using the model saved at .logging/default/version_1 with options loaded from
 runner_config.json
 ```
-python src/model_runner.py score data/balanced_validation_En.csv --log-dir .logging/ --experiment-name default --experiment-version 1 -c runner_config.json
+python src/model_runner.py predict data/balanced_validation_En.csv --log-dir .logging/ --experiment-name default --experiment-version 1 -c runner_config.json
 ```
 Train a model using balanced_train_En.csv as training data and balanced_validation_En.csv as the validation data. 2 gpus
 will be used for scoring data.
@@ -46,7 +54,7 @@ cd path/to/proj/ling573-2022-spring
 ```
 The CLI script can be run with the following format:
 ```
-python src/model_runner.py {train|score} input_file [output_file] [optional flags]
+python src/model_runner.py {train|test|predict|convert} input_file [output_pred_file] [output_metrics_file] [optional flags]
 ```
 This project uses the Pytorch-Lightning framework for running models, which handles significant boilerplate code. There
 are many command line options, so for convenience the program allows specifying a config file with all of the options. To 
@@ -78,6 +86,35 @@ for training/validation steps and epochs. These logs and charts of the metrics c
 tensorboard --logdir=ling573-2022-spring/.logging/
 ```
 The `--logdir` directory should be the same as the one provided to the `--log-dir` option of model_runner.py.
+
+## Testing and Inference
+The `test` and `predict` are used for running the model outside of the training/validation loop. These modes will put
+the model into the `eval()` state and turn off tracking of gradients for efficient scoring. For both of these modes you 
+will need to provide the options for `--log-dir`, `--experiment-name`, and `--experiment-version` so that the model can
+be loaded for scoring. These two modes behave similarly, but `test` is used when you have the labels and you want to evaluate
+the performance of a saved model. `predict` is used when you want to perform inference and do not have the labels.
+
+Test mode can be run like this:
+```
+python src/model_runner.py test test_input_file pred_output_file metric_output_file --log-dir .logging --experiment-name prod --experiment-version 1
+```
+
+Predict mode can be run like this:
+```
+python src/model_runner.py predict input_file pred_output_file --log-dir .logging --experiment-name prod --experiment-version 1
+```
+
+## Convert
+If a model is not saved using the Pytorch-Lightning framework, there is a command to convert an existing model to a checkpoint.
+Any command line options that are passed will be saved as the model hyperparameters. However, since we are converting an already
+existing model, these hparams may not reflect the conditions under which the original model was trained. The usual `--log-dir`
+`--experiment-name`, `--experiment-version` options need to be passed to specify where the checkpoint should be saved.
+
+To convert a saved model at model/to/convert.pth to a Pytorch-Lightning checkpoint at .logging/default/version_0/, run the following command:
+```
+python src/model_runner.py convert model/to/convert.pth --log-dir .logging --experiment-name default --experiment-version 0 -c runner_config.json
+```
+
 
 # Changing Models
 When adding new models to model runner, make sure to do the following:

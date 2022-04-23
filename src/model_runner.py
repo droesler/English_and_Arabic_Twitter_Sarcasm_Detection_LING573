@@ -39,7 +39,7 @@ class DataRetriever:
         else:
             train_data = pd.read_csv(self.train_file, sep=delimiter)
         train_data = train_data.loc[train_data['tweet'].notna(), :]
-        return train_data['tweet'], train_data[self.label_to_classify]
+        return train_data['tweet'], train_data[self.label_to_classify].astype(int)
 
     def get_val(self, delimiter=','):
         if self.val_file is None:
@@ -47,11 +47,11 @@ class DataRetriever:
         else:
             val_data = pd.read_csv(self.val_file, sep=delimiter)
         val_data = val_data.loc[val_data['tweet'].notna(), :]
-        return val_data['tweet'], val_data[self.label_to_classify]
+        return val_data['tweet'], val_data[self.label_to_classify].astype(int)
 
     def get_test(self, delimiter=','):
         test_data = pd.read_csv(self.test_file, sep=delimiter, dtype=str)
-        return test_data['tweet'], test_data[self.label_to_classify]
+        return test_data['tweet'], test_data[self.label_to_classify].astype(int)
 
     def get_pred(self, delimiter=','):
         pred_data = pd.read_csv(self.pred_file, sep=delimiter, dtype=str)
@@ -133,9 +133,9 @@ class LightningSystem(LightningModule):
         return DataLoader(val_data, batch_size=batch_size, pin_memory=True, num_workers=self.num_workers)
 
     def test_dataloader(self):
-        print('val dataloader called')
+        print('test dataloader called')
 
-        test_inputs, test_labels = self.data_retriever.get_val()
+        test_inputs, test_labels = self.data_retriever.get_test()
         X_test, test_mask = self.preprocessor(test_inputs)
         test_labels = torch.tensor(test_labels.values)
 
@@ -344,7 +344,8 @@ def test(hparams):
     if not os.path.exists(last_checkpoint):
         raise ValueError(f"Could not load model given dir, name, and version. File does not exist: {last_checkpoint}")
 
-    model = LightningSystem.load_from_checkpoint(last_checkpoint, test_file=hparams.test_file,
+    hparam_file = os.path.join(root_path, 'hparams.yaml')
+    model = LightningSystem.load_from_checkpoint(last_checkpoint, test_file=hparams.test_file, hparams_file=hparam_file,
                                                  batch_size=hparams.batch_size, num_workers=hparams.num_workers)
 
     experiment_name = os.path.join(hparams.experiment_name, f'version_{hparams.experiment_version}', 'testing')
