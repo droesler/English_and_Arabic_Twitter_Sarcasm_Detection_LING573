@@ -6,13 +6,13 @@ channels:
   - defaults
 dependencies:
   - python=3.9
-  - transformers
-  - nb_conda_kernels
   - matplotlib
   - ipykernel
   - tqdm
   - pandas
-  - torchvision
-  - torchaudio
+  - pip>=22.0
   - pytorch
   - pytorch-lightning>=1.6.1
+  - pip:
+      - transformers>=4.18.0
+

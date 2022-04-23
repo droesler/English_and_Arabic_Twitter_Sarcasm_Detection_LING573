@@ -5,6 +5,7 @@
   "scheduler_freq": 15,
   "scheduler_mult": 2,
   "learning_rate": 0.005,
+  "model_class": "BertClassifier",
   "batch_size": 32,
   "limit_train_batches": 1.0,
   "limit_val_batches": 1.0,

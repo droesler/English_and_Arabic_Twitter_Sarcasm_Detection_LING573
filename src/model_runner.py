@@ -19,7 +19,8 @@ from models import BertClassifier, BertSmallClassifier
 
 
 class DataRetriever:
-    def __init__(self, label_to_classify=None, train_file=None, val_file=None, pred_file=None, random_state=None, train_size=0.8):
+    def __init__(self, label_to_classify=None, train_file=None, val_file=None, pred_file=None, test_file=None,
+                 random_state=None, train_size=0.8):
         if random_state is None or np.isnan(random_state):
             random_state = np.random.randint(0, 1e8)
         self.random_state = int(random_state)
@@ -28,6 +29,7 @@ class DataRetriever:
         self.train_size = train_size
         self.train_file = train_file
         self.val_file = val_file
+        self.test_file = test_file
         self.pred_file = pred_file
 
 
@@ -47,9 +49,15 @@ class DataRetriever:
         val_data = val_data.loc[val_data['tweet'].notna(), :]
         return val_data['tweet'], val_data[self.label_to_classify]
 
+    def get_test(self, delimiter=','):
+        test_data = pd.read_csv(self.test_file, sep=delimiter, dtype=str)
+        return test_data['tweet'], test_data[self.label_to_classify]
+
     def get_pred(self, delimiter=','):
         pred_data = pd.read_csv(self.pred_file, sep=delimiter, dtype=str)
         return pred_data['tweet']
+
+
 
     def _split_train_val(self, return_train=True, delimiter=','):
         data = pd.read_csv(self.train_file, sep=delimiter)
@@ -68,14 +76,15 @@ class DataRetriever:
 
 class LightningSystem(LightningModule):
     
-    def __init__(self, train_file=None, val_file=None, pred_file=None, random_state=None, train_size=0.8, batch_size=32, scheduler_mult=1, learning_rate=0.001, warm_restart=1, num_workers=1, **kwargs):
+    def __init__(self, train_file=None, val_file=None, pred_file=None, test_file=None, random_state=None, train_size=0.8,
+                 batch_size=32, scheduler_mult=1, learning_rate=0.001, warm_restart=1, num_workers=1, **kwargs):
         super().__init__()
 
         self.num_workers = num_workers
         self.save_hyperparameters(ignore=["num_workers"])
 
 
-        self.data_retriever = DataRetriever('sarcastic', train_file=train_file, val_file=val_file, pred_file=pred_file,
+        self.data_retriever = DataRetriever('sarcastic', train_file=train_file, val_file=val_file, test_file=test_file, pred_file=pred_file,
                                        random_state=random_state, train_size=train_size)
 
         metrics = MetricCollection([Accuracy(),
@@ -85,10 +94,9 @@ class LightningSystem(LightningModule):
                                     AUROC(pos_label=1, num_classes=1)], compute_groups=False)
         self.train_metrics = metrics.clone(prefix='train_')
         self.val_metrics = metrics.clone(prefix='val_')
+        self.test_metrics = metrics.clone(prefix='test_')
 
         # Get the class constructor from command line options and initialize
-        self.model = globals()[hparams.model_class]()
-        self.preprocessor = self.model.get_preprocessor()
 
 
     def train_dataloader(self):
@@ -122,6 +130,22 @@ class LightningSystem(LightningModule):
         print("Validation Dataset Size: ", len(val_data))
         return DataLoader(val_data, batch_size=batch_size, pin_memory=True, num_workers=self.num_workers)
 
+    def test_dataloader(self):
+        print('val dataloader called')
+
+        test_inputs, test_labels = self.data_retriever.get_val()
+        X_test, test_mask = self.preprocessor(test_inputs)
+        test_labels = torch.tensor(test_labels.values)
+
+        batch_size = self.hparams.batch_size
+
+        # Create the DataLoader for our validation set
+        test_data = TensorDataset(X_test, test_mask, test_labels)
+        # val_sampler = SequentialSampler(val_data)
+
+        print("Test Dataset Size: ", len(test_data))
+        return DataLoader(test_data, batch_size=batch_size, shuffle=False, pin_memory=True, num_workers=self.num_workers)
+
     def predict_dataloader(self):
         pred_inputs = self.data_retriever.get_pred()
         X_pred, pred_mask = self.preprocessor(pred_inputs)
@@ -139,8 +163,8 @@ class LightningSystem(LightningModule):
         nll = F.cross_entropy(logit, label)
         return nll
 
-    def training_step(self, data_batch, batch_i):
-        x, mask, labels = data_batch
+    def training_step(self, batch, batch_i):
+        x, mask, labels = batch
 
         logits = self.model.forward(x, mask)
         loss = self.loss(labels, logits)
@@ -155,9 +179,9 @@ class LightningSystem(LightningModule):
         # see https://torchmetrics.readthedocs.io/en/stable/pages/overview.html#metrics-in-dataparallel-dp-mode
         return {"loss":loss, "pred": preds}
 
-    def validation_step(self, data_batch, batch_i):
+    def validation_step(self, batch, batch_i):
 
-        x, mask, labels = data_batch
+        x, mask, labels = batch
 
         logits = self.model.forward(x, mask)
         loss = self.loss(labels, logits)
@@ -171,11 +195,28 @@ class LightningSystem(LightningModule):
         # Need to return a dict and then log in validation_step_end if using DP mode.
         # see https://torchmetrics.readthedocs.io/en/stable/pages/overview.html#metrics-in-dataparallel-dp-mode
         return {"loss":loss, "pred": preds}
+    
+    def test_step(self, batch, batch_idx):
+        x, mask, labels = batch
+
+        logits = self.model.forward(x, mask)
+        loss = self.loss(labels, logits)
+        preds = torch.argmax(logits, dim=1)
+
+        output_metrics = self.test_metrics(preds, labels)
+
+        self.log("test_step_loss", loss)
+        self.log_dict(output_metrics)
+
+        # Need to return a dict and then log in validation_step_end if using DP mode.
+        # see https://torchmetrics.readthedocs.io/en/stable/pages/overview.html#metrics-in-dataparallel-dp-mode
+        return {"loss": loss, "logits": logits, "preds": preds, "labels": labels}
 
     def predict_step(self, batch, batch_idx):
         x, mask = batch
         logits = self.model.forward(x, mask)
         preds = torch.argmax(logits, dim=1)
+
         return logits, preds
 
     def training_epoch_end(self, outputs):
@@ -195,6 +236,24 @@ class LightningSystem(LightningModule):
         avg_val_loss = np.mean([output['loss'] for output in outputs])
         self.log('avg_val_loss', avg_val_loss)
         print("Validation END ")
+
+    def test_epoch_end(self, outputs):
+        # Compute first instead of logging so we can add '_epoch' to the metric names
+        epoch_metrics = self.test_metrics.compute()
+        epoch_metrics = {k + '_epoch': v for k, v in epoch_metrics.items()}
+        self.log_dict(epoch_metrics)
+
+        # Normally testing only retrieves metrics at the end. This is a little hack to make the logits, labels, and preds
+        # Available at the end of testing.
+        logits = torch.cat([output['logits'] for output in outputs])
+        preds = torch.cat([output['preds'] for output in outputs])
+        labels = torch.cat([output['labels'] for output in outputs])
+        self.test_results = {'logits': logits, 'preds': preds, 'labels': labels}
+
+        avg_test_loss = np.mean([output['loss'] for output in outputs])
+        self.log('avg_test_loss', avg_test_loss)
+
+        print("Test END ")
 
     def configure_optimizers(self):
         optimizer = AdamW(self.model.parameters(), lr=self.hparams.learning_rate, eps=1e-8,  # Default epsilon value is 1e-6
@@ -227,11 +286,8 @@ def train(hparams):
     dict_args = vars(hparams)
     model = LightningSystem(**dict_args)
     ckpt_path = None
+
     if hparams.experiment_version is not None:
-        #julie here -- adjusting the code to see if it resolves a syntax error that I'm getting on my end
-        #v='version_{}'
-        #vrsn=v.format(hparams.experiment_version)
-        #root_path=os.path.join(hparams.log_dir,hparams.experiment_name,vrsn)
         root_path = os.path.join(hparams.log_dir, hparams.experiment_name, f'version_{hparams.experiment_version}')
         last_checkpoint = os.path.join(root_path, 'best_model.ckpt')
         if os.path.exists(last_checkpoint):
@@ -242,16 +298,9 @@ def train(hparams):
     # These have reversed orders.
     if hparams.experiment_version is None:
         logger = TensorBoardLogger(hparams.log_dir, hparams.experiment_name, hparams.experiment_version, default_hp_metric=False)
-        #julie here again -- 
-        #v='version_{}'
-        #vrsn=v.format(logger.version)
-        #haparams.experiment_version=vrsn
         hparams.experiment_version = f'version_{logger.version}'
+
     else:
-        #julie -- 
-        #v='version_{}'
-        #vrsn=v.format(hparams.experiment_version)
-        #hparams.experiment_version=vrsn
         hparams.experiment_version = f'version_{hparams.experiment_version}'
         logger = TensorBoardLogger(hparams.log_dir, hparams.experiment_name, hparams.experiment_version, default_hp_metric=False)
 
@@ -283,18 +332,58 @@ def train(hparams):
     trainer.fit(model)
 
 
-def score(hparams):
-    #julie 
-    #v='version_{}'
-    #vrsn=v.format(hparams.experiment_version)
-    #root_path=os.path.join(hparams.log_dir,hparams.experiment_name,vrsn)
+def test(hparams):
+    """
+    Run testing and evaluate performance metrics on model output. Writes model output and metrics to file.
+    """
+
+    root_path = os.path.join(hparams.log_dir, hparams.experiment_name, f'version_{hparams.experiment_version}')
+    last_checkpoint = os.path.join(root_path, 'best_model.ckpt')
+    if not os.path.exists(last_checkpoint):
+        raise ValueError(f"Could not load model given dir, name, and version. File does not exist: {last_checkpoint}")
+
+    model = LightningSystem.load_from_checkpoint(last_checkpoint, test_file=hparams.test_file,
+                                                 batch_size=hparams.batch_size, num_workers=hparams.num_workers)
+
+    experiment_name = os.path.join(hparams.experiment_name, f'version_{hparams.experiment_version}', 'testing')
+    logger = TensorBoardLogger(hparams.log_dir, hparams.experiment_name, f'version_{hparams.experiment_version}',
+                               sub_dir='testing', default_hp_metric=False)
+
+    logger.log_hyperparams(hparams, metrics={"avg_test_loss": 10})
+
+    # configure trainer
+    print(hparams)
+
+    trainer = Trainer.from_argparse_args(hparams, logger=logger, default_root_dir=hparams.log_dir,
+                                         enable_checkpointing=False)
+
+    metrics = trainer.test(model)[0]
+
+    # We don't need the last step loss, so remove it
+    del metrics['test_step_loss']
+
+    # Write predictions, logits, and labels to file
+    output_dict = model.test_results
+    logits = output_dict.pop('logits')
+    output_dict['logits_0'] = logits[:,0]
+    output_dict['logits_1'] = logits[:, 1]
+    outputs = pd.DataFrame(output_dict)
+    outputs.to_csv(hparams.pred_output_file, index=False)
+
+    # Write metrics to file
+    metrics_df = pd.DataFrame.from_dict(metrics, orient='index', columns=['Value'])
+    metrics_df.index.name = 'Metric Name'
+    metrics_df.to_csv(hparams.metrics_output_file)
+
+
+def predict(hparams):
     root_path = os.path.join(hparams.log_dir, hparams.experiment_name, f'version_{hparams.experiment_version}')
     last_checkpoint = os.path.join(root_path, 'best_model.ckpt')
     if not os.path.exists(last_checkpoint):
         raise ValueError(f"Could not load model given dir, name, and version. File does not exist: {last_checkpoint}")
     output_file = hparams.output_file
 
-    model = LightningSystem.load_from_checkpoint(last_checkpoint, pred_file=hparams.score_file, batch_size=hparams.batch_size, num_workers=hparams.num_workers)
+    model = LightningSystem.load_from_checkpoint(last_checkpoint, pred_file=hparams.predict_file, batch_size=hparams.batch_size, num_workers=hparams.num_workers)
     trainer = Trainer.from_argparse_args(hparams)
     outputs = trainer.predict(model)
 
@@ -305,6 +394,44 @@ def score(hparams):
     df = pd.DataFrame(preds, columns=['prediction'])
     df[['logit_0', 'logit_1']] = logits
     df.to_csv(hparams.output_file, sep=',', index=False)
+
+
+def convert_saved_model_to_checkpoint(hparams):
+    model_save_path = hparams.model_save_path
+    del hparams.model_save_path
+    print(hparams)
+
+    with open(model_save_path, 'rb') as f:
+        model = torch.load(f, map_location=torch.device('cpu'))
+    dict_args = vars(hparams)
+    lightning_model = LightningSystem(**dict_args, train_file='data/balanced_train_En.csv')
+    lightning_model.model = model
+
+    if hparams.experiment_version is None:
+        logger = TensorBoardLogger(hparams.log_dir, hparams.experiment_name, hparams.experiment_version, default_hp_metric=False)
+        hparams.experiment_version = f'version_{logger.version}'
+
+    else:
+        hparams.experiment_version = f'version_{hparams.experiment_version}'
+        logger = TensorBoardLogger(hparams.log_dir, hparams.experiment_name, hparams.experiment_version, default_hp_metric=False)
+
+
+    model_save_path = os.path.join(hparams.log_dir, hparams.experiment_name, hparams.experiment_version)
+    checkpoint = ModelCheckpoint(
+        dirpath=model_save_path,
+        filename="best_model",
+        save_top_k=1,
+        verbose=True
+    )
+
+    logger.log_hyperparams(hparams, metrics={"avg_train_loss": 10, "avg_val_loss": 10})
+
+    trainer = Trainer.from_argparse_args(hparams, logger=logger, default_root_dir=hparams.log_dir,
+                      enable_checkpointing=True, callbacks=[checkpoint])
+
+    trainer.validate(lightning_model)
+
+    trainer.save_checkpoint(os.path.join(model_save_path, "best_model.ckpt"))
 
 def add_program_args(parser):
     parser.add_argument('--log-dir', default=".logging/", type=str, help='Folder to use for logging experiments.')
@@ -340,9 +467,19 @@ def add_train_args(parser):
 
     add_model_specific_args(parser)
 
-def add_score_args(parser):
-    parser.add_argument('score_file', action='store', type=str)
+def add_test_args(parser):
+    parser.add_argument('test_file', action='store', type=str)
+    parser.add_argument('pred_output_file', action='store',type=str)
+    parser.add_argument('metrics_output_file', action='store', type=str)
+
+def add_predict_args(parser):
+    parser.add_argument('predict_file', action='store', type=str)
     parser.add_argument('output_file', action='store',type=str)
+
+
+def add_convert_args(parser):
+    parser.add_argument('model_save_path', action='store', type=str, help='Path to saved model.')
+
 
 def add_model_specific_args(parser):
     parser.add_argument('--warm-restart', action='store_true', help='Use warm restarts')
@@ -353,16 +490,19 @@ def add_model_specific_args(parser):
 
 
 if __name__ == '__main__':
-
     global_parser = argparse.ArgumentParser(add_help=False)
     add_program_args(global_parser)
     parser = argparse.ArgumentParser(add_help=True)
 
     subparser = parser.add_subparsers(dest='subparser_name', required=True)
     train_parser = subparser.add_parser('train', parents=[global_parser], add_help=True, help='Build a model from the input file.')
-    score_parser = subparser.add_parser('score', parents=[global_parser], add_help=True, help='Score input file using a model.')
+    test_parser = subparser.add_parser('test', parents=[global_parser], add_help=True, help='Run testing on input file using a model.')
+    predict_parser = subparser.add_parser('predict', parents=[global_parser], add_help=True, help='predict input file using a model.')
+    convert_parser = subparser.add_parser('convert', parents=[global_parser], add_help=True, help='Convert saved model to checkpoint')
     add_train_args(train_parser)
-    add_score_args(score_parser)
+    add_test_args(test_parser)
+    add_convert_args(convert_parser)
+    add_predict_args(predict_parser)
 
     args = sys.argv[1:]
     hparams = parser.parse_args(args)
@@ -371,18 +511,26 @@ if __name__ == '__main__':
     if hparams.config is not None:
         config = json.load(hparams.config)
         train_parser.set_defaults(**config)
-        score_parser.set_defaults(**config)
+        test_parser.set_defaults(**config)
+        predict_parser.set_defaults(**config)
+        convert_parser.set_defaults(**config)
         hparams = parser.parse_args(args)
         hparams.config = None
     
     if hparams.num_workers < 1:
         hparams.num_workers = os.cpu_count()
-    
-    if hparams.subparser_name == 'score':
-        score(hparams)
-    
-    else:
+
+    if hparams.subparser_name == 'train':
         train(hparams)
+
+    elif hparams.subparser_name == 'test':
+        test(hparams)
+
+    elif hparams.subparser_name == 'predict':
+        predict(hparams)
+
+    else:
+        convert_saved_model_to_checkpoint(hparams)
 
 """
 NOTE: To view logs and visualizations run:
