@@ -24,5 +24,6 @@ python test_models.py
 
 ```
 cd ../..   # go back to root folder
+python src/model_runner.py convert /home2/droesl/573/test_model.pth --log-dir .logging --experiment-name default --experiment-version 0 -c runner_config.json
 python src/model_runner.py predict input_file pred_output_file --log-dir .logging --experiment-name prod --experiment-version 1
 ```

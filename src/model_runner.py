@@ -15,7 +15,8 @@ from torch.nn import functional as F
 from torch.utils.data import DataLoader, TensorDataset
 from transformers.optimization import AdamW
 from torchmetrics import MetricCollection, Accuracy, Precision, Recall, AUROC, F1Score
-from models import BertSmallClassifier
+from models import BertClassifier, BertSmallClassifier
+from sklearn.metrics import classification_report
 
 
 class DataRetriever:
@@ -74,7 +75,7 @@ class DataRetriever:
 
 class LightningSystem(LightningModule):
     def __init__(self, train_file=None, val_file=None, pred_file=None, test_file=None, random_state=None,
-                 model_class=BertSmallClassifier, train_size=0.8, batch_size=32, scheduler_mult=1, learning_rate=0.001,
+                 model_class=BertClassifier, train_size=0.8, batch_size=32, scheduler_mult=1, learning_rate=0.001,
                  warm_restart=1, num_workers=1, **kwargs):
         super().__init__()
 
@@ -380,10 +381,14 @@ def test(hparams):
     outputs = pd.DataFrame(output_dict)
     outputs.to_csv(hparams.pred_output_file, index=False)
 
+    report = classification_report(outputs["labels"], outputs["preds"], zero_division=0)
+    f = open(hparams.metrics_output_file, "a")
+    print(report, file=f)
+    f.close()
     # Write metrics to file
-    metrics_df = pd.DataFrame.from_dict(metrics, orient='index', columns=['Value'])
-    metrics_df.index.name = 'Metric Name'
-    metrics_df.to_csv(hparams.metrics_output_file)
+    # metrics_df = pd.DataFrame.from_dict(metrics, orient='index', columns=['Value'])
+    # metrics_df.index.name = 'Metric Name'
+    # metrics_df.to_csv(hparams.metrics_output_file)
 
 
 def predict(hparams):
@@ -454,7 +459,7 @@ def add_program_args(parser):
                                help='batch size will be divided over all gpus being used across all nodes.')
     parser.add_argument('--num-workers', default=-1, type=int, help="Num cpu cores to use for Dataloading")
     parser.add_argument('-c', '--config', default=None, type=argparse.FileType('r'), help='Config file for options. Will be overridden by cli flags.')
-    parser.add_argument('--model-class', default='BertSmallClassifier', type=str, help="Name of model class to use for modeling.")
+    parser.add_argument('--model-class', default='BertClassifier', type=str, help="Name of model class to use for modeling.")
 
 
 def add_train_args(parser):
