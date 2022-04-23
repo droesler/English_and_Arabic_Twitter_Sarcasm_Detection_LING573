@@ -15,7 +15,7 @@ from torch.nn import functional as F
 from torch.utils.data import DataLoader, TensorDataset
 from transformers.optimization import AdamW
 from torchmetrics import MetricCollection, Accuracy, Precision, Recall, AUROC, F1Score
-from models import BertClassifier, BertSmallClassifier
+from models import BertSmallClassifier
 
 
 class DataRetriever:
@@ -31,7 +31,6 @@ class DataRetriever:
         self.val_file = val_file
         self.test_file = test_file
         self.pred_file = pred_file
-
 
     def get_train(self, delimiter=','):
         if self.val_file is None:
@@ -57,8 +56,6 @@ class DataRetriever:
         pred_data = pd.read_csv(self.pred_file, sep=delimiter, dtype=str)
         return pred_data['tweet']
 
-
-
     def _split_train_val(self, return_train=True, delimiter=','):
         data = pd.read_csv(self.train_file, sep=delimiter)
         # If the mask is set, then we've already split the data. We need to be consistent with the split so we keep the mask as is.
@@ -68,6 +65,7 @@ class DataRetriever:
             train_mask = pd.Series(np.zeros(len(data))).astype(bool)
             train_mask[train_ids] = True
             self.__train_mask = train_mask
+
         if return_train:
             return data.loc[self.__train_mask, :]
         else:
@@ -75,7 +73,6 @@ class DataRetriever:
 
 
 class LightningSystem(LightningModule):
-    
     def __init__(self, train_file=None, val_file=None, pred_file=None, test_file=None, random_state=None,
                  model_class=BertSmallClassifier, train_size=0.8, batch_size=32, scheduler_mult=1, learning_rate=0.001,
                  warm_restart=1, num_workers=1, **kwargs):
@@ -83,10 +80,15 @@ class LightningSystem(LightningModule):
 
         self.num_workers = num_workers
         self.save_hyperparameters(ignore=["num_workers"])
-
-
-        self.data_retriever = DataRetriever('sarcastic', train_file=train_file, val_file=val_file, test_file=test_file, pred_file=pred_file,
-                                       random_state=random_state, train_size=train_size)
+        self.data_retriever = DataRetriever(
+            'sarcastic',
+            train_file=train_file,
+            val_file=val_file,
+            test_file=test_file,
+            pred_file=pred_file,
+            random_state=random_state,
+            train_size=train_size
+        )
 
         metrics = MetricCollection([Accuracy(num_classes=1, average='macro', multiclass=False),
                                     Precision(num_classes=1, average='macro', multiclass=False),
@@ -196,8 +198,8 @@ class LightningSystem(LightningModule):
 
         # Need to return a dict and then log in validation_step_end if using DP mode.
         # see https://torchmetrics.readthedocs.io/en/stable/pages/overview.html#metrics-in-dataparallel-dp-mode
-        return {"loss":loss, "pred": preds}
-    
+        return {"loss": loss, "pred": preds}
+
     def test_step(self, batch, batch_idx):
         x, mask, labels = batch
 
@@ -306,9 +308,8 @@ def train(hparams):
         hparams.experiment_version = f'version_{hparams.experiment_version}'
         logger = TensorBoardLogger(hparams.log_dir, hparams.experiment_name, hparams.experiment_version, default_hp_metric=False)
 
-
     model_save_path = os.path.join(hparams.log_dir, hparams.experiment_name, hparams.experiment_version)
-    #print(model_save_path)
+    # print(model_save_path)
     checkpoint = ModelCheckpoint(
         dirpath=model_save_path,
         filename="best_model",
@@ -320,7 +321,7 @@ def train(hparams):
 
     logger.log_hyperparams(hparams, metrics={"avg_train_loss": 1, "avg_val_loss": 1})
 
-    #configure trainer
+    # configure trainer
     print(hparams)
 
     # Okay, this is pretty dumb. There's enable_checkpoint, checkpoint_callback, and callbacks. The documentation would have you believe that
@@ -328,8 +329,14 @@ def train(hparams):
     # enable_checkpoint needs to be set to True and the ModelCheckpoint callback needs to be added to callbacks in Trainer.from_argparse_args.
     # See site-packages/pytorch_lightning/trainer/connectors/callback_connector.py _configure_checkpoint_callbacks
     # (Note: self.trainer.checkpoint_callbacks is just a property that gets all callbacks from Trainer.callbacks that are instances of ModelCheckpoint
-    trainer = Trainer.from_argparse_args(hparams, logger=logger, default_root_dir=hparams.log_dir,
-                      enable_checkpointing=True, callbacks=[checkpoint], resume_from_checkpoint=ckpt_path)
+    trainer = Trainer.from_argparse_args(
+        hparams,
+        logger=logger,
+        default_root_dir=hparams.log_dir,
+        enable_checkpointing=True,
+        callbacks=[checkpoint],
+        resume_from_checkpoint=ckpt_path
+    )
 
     trainer.fit(model)
 
@@ -436,6 +443,7 @@ def convert_saved_model_to_checkpoint(hparams):
 
     trainer.save_checkpoint(os.path.join(model_save_path, "best_model.ckpt"))
 
+
 def add_program_args(parser):
     parser.add_argument('--log-dir', default=".logging/", type=str, help='Folder to use for logging experiments.')
     parser.add_argument('--experiment-name', default='default', type=str, help='name of experiment to log.')
@@ -470,10 +478,12 @@ def add_train_args(parser):
 
     add_model_specific_args(parser)
 
+
 def add_test_args(parser):
     parser.add_argument('test_file', action='store', type=str)
     parser.add_argument('pred_output_file', action='store',type=str)
     parser.add_argument('metrics_output_file', action='store', type=str)
+
 
 def add_predict_args(parser):
     parser.add_argument('predict_file', action='store', type=str)
@@ -519,7 +529,7 @@ if __name__ == '__main__':
         convert_parser.set_defaults(**config)
         hparams = parser.parse_args(args)
         hparams.config = None
-    
+
     if hparams.num_workers < 1:
         hparams.num_workers = os.cpu_count()
 

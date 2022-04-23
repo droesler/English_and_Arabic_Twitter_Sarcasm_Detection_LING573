@@ -7,6 +7,7 @@ from transformers import AutoModel, AutoTokenizer
 
 MAX_LEN = 100
 
+
 def preprocessing_for_bert(tokenizer, data):
     """Perform required preprocessing steps for pretrained BERT.
     @param    data (np.array): Array of texts to be processed.
@@ -106,6 +107,7 @@ class BertClassifier(nn.Module):
         tokenizer = AutoTokenizer.from_pretrained("vinai/bertweet-base", normalization=True, is_fast=False)
         return partial(preprocessing_for_bert, tokenizer)
 
+
 class BertSmallClassifier(nn.Module):
     """Bert Model for Classification Tasks.
     """
@@ -165,6 +167,7 @@ class BertSmallClassifier(nn.Module):
         os.environ['TOKENIZERS_PARALLELISM'] = 'false'
         tokenizer = AutoTokenizer.from_pretrained("prajjwal1/bert-tiny", normalization=True, is_fast=False)
         return partial(preprocessing_for_bert, tokenizer)
+
 
 class D2Model(nn.Module):
     """David's Model for D2. TestModel
