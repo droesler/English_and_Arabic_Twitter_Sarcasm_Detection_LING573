@@ -76,8 +76,9 @@ class DataRetriever:
 
 class LightningSystem(LightningModule):
     
-    def __init__(self, train_file=None, val_file=None, pred_file=None, test_file=None, random_state=None, train_size=0.8,
-                 batch_size=32, scheduler_mult=1, learning_rate=0.001, warm_restart=1, num_workers=1, **kwargs):
+    def __init__(self, train_file=None, val_file=None, pred_file=None, test_file=None, random_state=None,
+                 model_class=BertSmallClassifier, train_size=0.8, batch_size=32, scheduler_mult=1, learning_rate=0.001,
+                 warm_restart=1, num_workers=1, **kwargs):
         super().__init__()
 
         self.num_workers = num_workers
@@ -87,17 +88,18 @@ class LightningSystem(LightningModule):
         self.data_retriever = DataRetriever('sarcastic', train_file=train_file, val_file=val_file, test_file=test_file, pred_file=pred_file,
                                        random_state=random_state, train_size=train_size)
 
-        metrics = MetricCollection([Accuracy(),
-                                    Precision(),
-                                    Recall(),
-                                    F1Score(),
+        metrics = MetricCollection([Accuracy(num_classes=1, average='macro', multiclass=False),
+                                    Precision(num_classes=1, average='macro', multiclass=False),
+                                    Recall(num_classes=1, average='macro', multiclass=False),
+                                    F1Score(num_classes=1, average='macro', multiclass=False),
                                     AUROC(pos_label=1, num_classes=1)], compute_groups=False)
         self.train_metrics = metrics.clone(prefix='train_')
         self.val_metrics = metrics.clone(prefix='val_')
         self.test_metrics = metrics.clone(prefix='test_')
 
         # Get the class constructor from command line options and initialize
-
+        self.model = globals()[model_class]()
+        self.preprocessor = self.model.get_preprocessor()
 
     def train_dataloader(self):
         print('tng dataloader called')
