@@ -9,9 +9,15 @@ This will create a conda environment with the name "ling573-2022-spring". To act
 ```
 conda activate ling573-2022-spring
 ```
+If you update `environment.yml`, run:
+```
+conda activate ling573-2022-spring
+conda env update --file src/environment.yml --prune
+```
 
-# Quickstart
-Train a model on balanced_train_En.csv using options from runner_config.json, logging to ./logging, and using
+
+# Quick Start
+Train a model on *balanced_train_En.csv* using options from runner_config.json, logging to ./logging, and using
 BertSmallClassifier as the model. Since no --val-file is provided, balanced_train_En.csv will be split into train and
 validation using `--train-size` option as the percent used for training.
 ```
@@ -62,7 +68,7 @@ specify a config file use `-c` or `--config` followed by the path to a JSON file
 same as the command line flags, but with the initial `--` removed and all hyphens `-` replaced with underscores `_`. The config
 file will take priority over any defaults for these options, and any supplied CLI flags will take priority over the config file.
 
-Pytorch-lightning handles backpropagation, learn-rate scheduling, `eval()` and `torch.no_grad()`. The framework also handles putting
+Pytorch-lightning handles back-propagation, learn-rate scheduling, `eval()` and `torch.no_grad()`. The framework also handles putting
 models and data on the correct devices and machines, so no need to call `torch.to_device()`. The framework also handles all of the other common
 boilerplate code needed when running Pytorch models. The only thing that the user needs to supply is the logic for training and
 validation steps, and the initial creation of Dataloaders in the appropriate methods (`train_dataloader`, `val_dataloader`, `predict_dataloader`)
@@ -71,7 +77,7 @@ Most of the command line options are passed directly to pytorch_lightning.Traine
 For more info on Pytorch-Lightning see https://pytorch-lightning.readthedocs.io/en/stable/
 
 ## Checkpointing and Logging
-The framework will automatically handle tcheckpointing and loggging for training. The location of the logs and checkpoints
+The framework will automatically handle checkpointing and logging for training. The location of the logs and checkpoints
 specified with the options `--log-dir`, `--experiment-name`, `--experiment-version`. A directory hierarchy 
 will be created with these three components like so: `my_log_dir/my_experiment_name/version_1`. The version argument should
 be an integer. If `--experiment-version` is not provided, the framework will automatically increment the highest version by 1 so
