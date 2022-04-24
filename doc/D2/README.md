@@ -10,7 +10,6 @@ We use conda to manage our dev environment. To rerun our evaluation script, you 
 
 ```
 conda env create -f src/environment.yml
-conda activate ling573-2022-spring
 ```
 
 Make sure you can execute `D2.sh`
