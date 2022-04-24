@@ -35,7 +35,7 @@ if __name__ == "__main__":
             "logits_1": [scores[1] for scores in y_pred_rf_scores]
         }
     )
-    df_rf.to_csv("outputs/D2/baseline_rf/pred_output.csv", index=False)
+    df_rf.to_csv("outputs/D2/baseline_rf/D2_scores.out", index=False)
     rf_fname = f'outputs/D2/baseline_rf/rf.pkl'
     with open(rf_fname, 'wb') as p:
         pickle.dump(rf, p)
@@ -55,7 +55,7 @@ if __name__ == "__main__":
             "logits_1": [scores[1] for scores in y_pred_lg_scores]
         }
     )
-    df_lg.to_csv("outputs/D2/baseline_lightgbm/pred_output.csv", index=False)
+    df_lg.to_csv("outputs/D2/baseline_lightgbm/D2_scores.out", index=False)
     lg_fname = f'outputs/D2/baseline_lightgbm/lg.pkl'
     with open(lg_fname, 'wb') as p:
         pickle.dump(lg, p)

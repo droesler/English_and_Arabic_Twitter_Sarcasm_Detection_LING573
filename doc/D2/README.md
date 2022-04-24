@@ -1,4 +1,4 @@
-## How Set up Environment
+## How to Replicate D2 Results
 
 1. First, clone the project repo at https://github.com/amy17519/ling573-2022-spring.git
 
@@ -43,10 +43,10 @@ python src/baseline/test_models.py
 
 The following are the outputs from the execution:
 
-- `results/D2/baseline_lightgbm/metrics.txt` - the classification report for baseline lightgbm model
-- `results/D2/baseline_rf/metrics.txt` - the classification report for baseline random forest model
-- `outputs/D2/baseline_lightgbm/D2_scores.out` - containing scores from running baseline lightgbm model
-- `outputs/D2/baseline_rf/D2_scores.out` - containing scores from running baseline random forest model
+- `results/D2/baseline_lightgbm/metrics.txt` - classification report for baseline lightgbm model
+- `results/D2/baseline_rf/metrics.txt` - classification report for baseline random forest model
+- `outputs/D2/baseline_lightgbm/D2_scores.out` - contains scores from running baseline lightgbm model
+- `outputs/D2/baseline_rf/D2_scores.out` - contains scores from running baseline random forest model
 - `outputs/D2/baseline_rf/rf.pkl` - the pickle file for baseline random forest model
 - `outputs/D2/baseline_lightgbm/lg.pkl` - the pickle file for baseline random forest model
 
@@ -57,7 +57,7 @@ The BertTweet model is saved at `/home2/droesl/573/test_model.pth` on patas and 
 
 ```
 LC_ALL=en_US.UTF-8 python src/model_runner.py convert /home2/droesl/573/test_model.pth --log-dir .logging --experiment-name default --experiment-version 0 -c runner_config.json
-LC_ALL=en_US.UTF-8 python src/model_runner.py test data/balanced_validation_En.csv outputs/D2/bert_tweet/pred_output.csv results/D2/bert_tweet/metrics.txt --log-dir .logging/ --experiment-name default --experiment-version 0
+LC_ALL=en_US.UTF-8 python src/model_runner.py test data/balanced_validation_En.csv outputs/D2/bert_tweet/D2_scores.out results/D2/bert_tweet/metrics.txt --log-dir .logging/ --experiment-name default --experiment-version 0
 ```
 
 The following are the outputs from the execution:
