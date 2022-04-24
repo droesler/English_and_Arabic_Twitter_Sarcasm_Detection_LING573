@@ -382,7 +382,7 @@ def test(hparams):
     outputs.to_csv(hparams.pred_output_file, index=False)
 
     report = classification_report(outputs["labels"], outputs["preds"], zero_division=0)
-    f = open(hparams.metrics_output_file, "a")
+    f = open(hparams.metrics_output_file, "w")
     print(report, file=f)
     f.close()
     # Write metrics to file
