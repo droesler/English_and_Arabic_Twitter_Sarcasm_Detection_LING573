@@ -62,5 +62,5 @@ LC_ALL=en_US.UTF-8 python src/model_runner.py test data/balanced_validation_En.c
 
 The following are the outputs from the execution:
 
-- `results/D2/bert_tweet/metrics.txt` - the classification report for BertTweet model
-- `outputs/D2/bert_tweet/D2_scores.out` - containing scores from running baseline lightgbm model
+- `results/D2/bert_tweet/metrics.txt` - the classification report for BERTweet model
+- `outputs/D2/bert_tweet/D2_scores.out` - contains scores from running BERTweet model
