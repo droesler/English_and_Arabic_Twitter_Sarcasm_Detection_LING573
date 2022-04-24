@@ -7,8 +7,14 @@ conda env create -f src/environment.yml
 conda activate ling573-2022-spring
 ```
 
+After the conda environment is activated, you can run the `D2.sh` file to replicate all the steps for both baseline models and BertTweet model.
+```
+bash D2.sh
+```
 
-## Replicate Results for D2 on patas - Baseline Models
+## What's in the `D2.sh`
+
+### Replicate Results for D2 on patas - Baseline Models
 
 We use random forest and lightgbm to train our baseline models. You can view the results in `/results/D2/baseline_rf` and `/results/D2/baseline_lightgbm` or replicate the results by running the following command. Make sure you are under directory `/src/baseline`
 
@@ -17,7 +23,7 @@ We use random forest and lightgbm to train our baseline models. You can view the
 python src/baseline/test_models.py
 ```
 
-# Replicate Results for D2 on patas - BertTweet Models
+### Replicate Results for D2 on patas - BertTweet Models
 
 ```
 # make sure you are at root of the project
