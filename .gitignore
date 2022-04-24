@@ -144,3 +144,8 @@ __pycache__
 # model file
 *.tar.gz
 *.pth
+
+# condor
+*.error
+*.log
+*.output

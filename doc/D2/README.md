@@ -1,4 +1,10 @@
-## How Set up Environment and 
+## How Set up Environment
+
+First, clone the project repo at https://github.com/amy17519/ling573-2022-spring.git
+
+```
+git clone https://github.com/amy17519/ling573-2022-spring.git
+```
 
 We use conda to manage our dev environment. To rerun our evaluation script, you can run the following command to set up the environment first:
 
@@ -7,10 +13,24 @@ conda env create -f src/environment.yml
 conda activate ling573-2022-spring
 ```
 
-After the conda environment is activated, you can run the `D2.sh` file to replicate all the steps for both baseline models and BertTweet model.
+Make sure you can execute `D2.sh`
+
+```
+chmod +x D2.sh
+```
+
+After the conda environment is activated and you have the right permission for `D2.sh`, you can run the `D2.sh` file to replicate all the steps for both baseline models and BertTweet model.
+
 ```
 bash D2.sh
 ```
+
+or via condor
+
+```
+condor_submit D2.cmd
+```
+
 
 ## What's in the `D2.sh`
 
