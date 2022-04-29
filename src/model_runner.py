@@ -10,10 +10,11 @@ from pytorch_lightning import Trainer
 from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.core import LightningModule
 from pytorch_lightning.loggers.tensorboard import TensorBoardLogger
+from pytorch_lightning.callbacks import LearningRateMonitor
 from torch import optim
 from torch.nn import functional as F
 from torch.utils.data import DataLoader, TensorDataset
-from transformers.optimization import AdamW
+from transformers.optimization import AdamW, get_linear_schedule_with_warmup
 from torchmetrics import MetricCollection, Accuracy, Precision, Recall, AUROC, F1Score
 from models import BertClassifier, BertSmallClassifier
 from sklearn.metrics import classification_report
@@ -91,10 +92,10 @@ class LightningSystem(LightningModule):
             train_size=train_size
         )
 
-        metrics = MetricCollection([Accuracy(num_classes=1, average='macro', multiclass=False),
-                                    Precision(num_classes=1, average='macro', multiclass=False),
-                                    Recall(num_classes=1, average='macro', multiclass=False),
-                                    F1Score(num_classes=1, average='macro', multiclass=False),
+        metrics = MetricCollection([Accuracy(num_classes=1, multiclass=False),
+                                    Precision(num_classes=1,  multiclass=False),
+                                    Recall(num_classes=1,  multiclass=False),
+                                    F1Score(num_classes=1, multiclass=False),
                                     AUROC(pos_label=1, num_classes=1)], compute_groups=False)
         self.train_metrics = metrics.clone(prefix='train_')
         self.val_metrics = metrics.clone(prefix='val_')
@@ -229,8 +230,9 @@ class LightningSystem(LightningModule):
         epoch_metrics = {k + '_epoch': v for k,v in epoch_metrics.items()}
         self.log_dict(epoch_metrics, on_epoch=True, on_step=False)
 
-        avg_train_loss = np.mean([output['loss'] for output in outputs])
+        avg_train_loss = torch.mean(torch.stack([output['loss'] for output in outputs]))
         self.log('avg_train_loss', avg_train_loss)
+
 
     def validation_epoch_end(self, outputs):
         # Compute first instead of logging so we can add '_epoch' to the metric names
@@ -238,7 +240,7 @@ class LightningSystem(LightningModule):
         epoch_metrics = {k + '_epoch': v for k, v in epoch_metrics.items()}
         self.log_dict(epoch_metrics)
 
-        avg_val_loss = np.mean([output['loss'] for output in outputs])
+        avg_val_loss = torch.mean(torch.stack([output['loss'] for output in outputs]))
         self.log('avg_val_loss', avg_val_loss)
         print("Validation END ")
 
@@ -255,7 +257,7 @@ class LightningSystem(LightningModule):
         labels = torch.cat([output['labels'] for output in outputs])
         self.test_results = {'logits': logits, 'preds': preds, 'labels': labels}
 
-        avg_test_loss = np.mean([output['loss'] for output in outputs])
+        avg_test_loss = torch.mean(torch.stack([output['loss'] for output in outputs]))
         self.log('avg_test_loss', avg_test_loss)
 
         print("Test END ")
@@ -264,12 +266,40 @@ class LightningSystem(LightningModule):
         optimizer = AdamW(self.model.parameters(), lr=self.hparams.learning_rate, eps=1e-8,  # Default epsilon value is 1e-6
                           weight_decay=.01)
 
-        if self.hparams.warm_restart:
-            scheduler = optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, hparams.scheduler_freq, T_mult=self.hparams.scheduler_mult, eta_min=0, last_epoch=-1)
-        else:
-            scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=self.hparams.scheduler_freq)
+        total_steps = self.num_training_steps
+
+        # Set up the learning rate scheduler
+        scheduler = get_linear_schedule_with_warmup(optimizer,
+                                                    num_warmup_steps=0,  # Default value
+                                                    num_training_steps=total_steps)
+
+       # if self.hparams.warm_restart:
+        #    scheduler = optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, hparams.scheduler_freq, T_mult=self.hparams.scheduler_mult, eta_min=0, last_epoch=-1)
+       # else:
+        #    scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=self.hparams.scheduler_freq)
 
         return [optimizer], [scheduler]
+
+    @property
+    def num_training_steps(self) -> int:
+        return self.trainer.max_epochs * self.num_training_steps_in_epoch
+
+    @property
+    def num_training_steps_in_epoch(self) -> int:
+        """Total training steps inferred from datamodule and devices."""
+        if self.trainer.max_steps > 0:
+            return self.trainer.max_steps
+
+        limit_batches = self.trainer.limit_train_batches
+        batches = len(self.train_dataloader())
+        batches = min(batches, limit_batches) if isinstance(limit_batches, int) else int(limit_batches * batches)
+
+        num_devices = max(1, self.trainer.num_gpus, self.trainer.num_processes)
+        if self.trainer.tpu_cores:
+            num_devices = max(num_devices, self.trainer.tpu_cores)
+
+        effective_accum = self.trainer.accumulate_grad_batches * num_devices
+        return (batches // effective_accum)
 
     def get_learn_rate(self):
         if self.trainer is None:
@@ -321,6 +351,7 @@ def train(hparams):
     )
 
     logger.log_hyperparams(hparams, metrics={"avg_train_loss": 1, "avg_val_loss": 1})
+    lr_monitor = LearningRateMonitor(logging_interval='step')
 
     # configure trainer
     print(hparams)
@@ -335,7 +366,7 @@ def train(hparams):
         logger=logger,
         default_root_dir=hparams.log_dir,
         enable_checkpointing=True,
-        callbacks=[checkpoint],
+        callbacks=[checkpoint, lr_monitor],
         resume_from_checkpoint=ckpt_path
     )
 
@@ -471,11 +502,10 @@ def add_train_args(parser):
     parser.add_argument('--description', default='no description', type=str, help='Provide a description for the experiment.')
     parser.add_argument('--random-state', default=None, type=int, help='Random seed')
     parser.add_argument('--log-every-n-steps', type=int, default=5, help='Log every n training or validation steps')
-    parser.add_argument('--max-steps', type=int, default=None)
-    parser.add_argument('--max-epochs', type=int, default=None)
+    parser.add_argument('--max-steps', type=int, default=None, help="Max number of steps")
+    parser.add_argument('--max-epochs', type=int, default=None, help="Max number of epochs to train on")
     parser.add_argument('--max-time', type=int, default=None)
     parser.add_argument('--distributed-backend', default='dp', choices=['dp', 'ddp'], type=str, help='Paralllel backend to use.')
-    parser.add_argument('--nb-epoch', default=10, type=int, help='Number of epochs to train on.')
     parser.add_argument('--limit-train-batches', default=1.0, type=float, help='Percent of training dataset to check.')
     parser.add_argument('--val-check-interval', default=1.0, type=float, help='Percent interval of training epoch to check validation.')
     parser.add_argument('--limit-val-batches', default=1.0, type=float, help='Percentage of validation dataset to check.')
