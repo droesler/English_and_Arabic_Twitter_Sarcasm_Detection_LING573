@@ -11,6 +11,7 @@ from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.core import LightningModule
 from pytorch_lightning.loggers.tensorboard import TensorBoardLogger
 from pytorch_lightning.callbacks import LearningRateMonitor
+from pytorch_lightning.utilities.seed import seed_everything
 from torch import optim
 from torch.nn import functional as F
 from torch.utils.data import DataLoader, TensorDataset
@@ -79,6 +80,10 @@ class LightningSystem(LightningModule):
                  model_class=BertClassifier, train_size=0.8, batch_size=32, scheduler_mult=1, learning_rate=0.001,
                  warm_restart=1, num_workers=1, **kwargs):
         super().__init__()
+
+        # apply random seed to torch and numpy
+        if random_state:
+            seed_everything(seed=random_state, workers=True)
 
         self.num_workers = num_workers
         self.save_hyperparameters(ignore=["num_workers"])
