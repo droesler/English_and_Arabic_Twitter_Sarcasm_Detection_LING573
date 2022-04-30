@@ -409,6 +409,11 @@ def test(hparams):
     logits = output_dict.pop('logits')
     output_dict['logits_0'] = logits[:,0]
     output_dict['logits_1'] = logits[:, 1]
+
+    # move output dict items to cpu 
+    for k, v in output_dict.items():
+      output_dict[k] = v.cpu()
+    
     outputs = pd.DataFrame(output_dict)
     outputs.to_csv(hparams.pred_output_file, index=False)
 
