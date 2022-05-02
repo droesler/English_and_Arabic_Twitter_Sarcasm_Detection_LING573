@@ -128,3 +128,14 @@ When adding new models to model runner, make sure to do the following:
 2) Add a static method to the class called `get_preprocessor` that returns a function to preprocess the input data.
 3) import the new model class in model_runner.py
 4) If this model differs from other the other Bert models, you may need to change the logic in `train_step`, `val_step`, `predict_step`, and `forward`. In most cases this won't be necessary.
+
+# Notes
+05/02) Addition of train.cmd, and train.sh
+In train.sh, logging goes into shared folder on patas; some additional steps need to be added to access the tensorboard (port 6066)
+For train.cmd, requests gpu. Occasionally runs into error where it claims "no gpu available" although it has been assigned a gpu. May be an issue with a specific machine.
+Changes to model_runner.py:
+  Calculates number of training steps over a period
+  Changed scheduler to  David's scheduler
+  Learning rate logging wasn't working, changed to pytorch lightning logger.
+  np.mean doesn't work on gpus, changed to torch.mean
+  Changed metrics, take out macro.
