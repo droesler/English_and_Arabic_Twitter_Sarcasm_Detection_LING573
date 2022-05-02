@@ -131,11 +131,14 @@ When adding new models to model runner, make sure to do the following:
 
 # Notes
 05/02) Addition of train.cmd, and train.sh
+
 In train.sh, logging goes into shared folder on patas; some additional steps need to be added to access the tensorboard (port 6066)
+
 For train.cmd, requests gpu. Occasionally runs into error where it claims "no gpu available" although it has been assigned a gpu. May be an issue with a specific machine.
+
 Changes to model_runner.py:
-  Calculates number of training steps over a period
-  Changed scheduler to  David's scheduler
-  Learning rate logging wasn't working, changed to pytorch lightning logger.
-  np.mean doesn't work on gpus, changed to torch.mean
-  Changed metrics, take out macro.
+1) Calculates number of training steps over a period
+2) Changed scheduler to  David's scheduler
+3) Learning rate logging wasn't working, changed to pytorch lightning logger.
+4) np.mean doesn't work on gpus, changed to torch.mean
+5) Changed metrics, take out macro.
