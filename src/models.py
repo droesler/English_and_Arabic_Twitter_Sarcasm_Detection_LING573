@@ -1,7 +1,7 @@
 import os
 import torch
 import torch.nn as nn
-
+import nltk
 from nltk.tokenize import TweetTokenizer
 from emoji import demojize
 
