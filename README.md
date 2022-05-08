@@ -75,12 +75,12 @@ LC_ALL=en_US.UTF-8 python src/model_runner.py test data/balanced_validation_En.c
 After output logits are produced by the five models another script, `src/get_ensemble.predictions.py`, will collect the output logits from the five models and do majority voting to determine the final ensemble predictions.
 
 
-The following files show the predictions and scores of the entire ensemble:
+D3.sh outputs the following results and output files:
 
 - `results/D3/bert_tweet/metrics.txt` - the classification report for the ensemble
 - `outputs/D3/bert_tweet/pred_output.csv` - the majority vote predictions of the ensemble
 
-For each of the five models in the ensemble, sub-predictions and scores can be found in 
+For each of the five models in the ensemble, sub-predictions and sub-scores can be found in 
 
 - `results/D3/bert_tweet/sub_models/`
 - `outputs/D3/bert_tweet/sub_models/`
