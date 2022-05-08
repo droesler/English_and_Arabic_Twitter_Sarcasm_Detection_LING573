@@ -42,7 +42,7 @@ condor_submit D3.cmd
 
 ## What's in the `D3.sh`
 
-### Replicate Results for D3 on patas - Ensemble of 5 BertTweet-large models
+Our D3 model is an ensemble of 5 BertTweet-large models. 
 
 The five BertTweet-large models are saved in the following locations on Patas:
 `/home2/droesl/573/1010random_bertweet_large_model.pth` 
@@ -50,8 +50,9 @@ The five BertTweet-large models are saved in the following locations on Patas:
 `/home2/droesl/573/4040random_bertweet_large_model.pth`
 `/home2/droesl/573/6060random_bertweet_large_model.pth`
 `/home2/droesl/573/7070random_bertweet_large_model.pth`
-We have set the permissions for the saved models to be accessible to graders. The D3.sh script will convert each of the five models to PyTorch Lightning checkpoints before performing predictions.
+We have set the permissions for the saved models to be accessible to graders. 
 
+The D3.sh script will convert each of the five models to PyTorch Lightning checkpoints before performing predictions:
 ```
 LC_ALL=en_US.UTF-8 python src/model_runner.py convert /home2/droesl/573/1010random_bertweet_large_model.pth  --log-dir .logging --experiment-name model1 --experiment-version 0 -c runner_config.json
 LC_ALL=en_US.UTF-8 python src/model_runner.py test data/balanced_validation_En.csv outputs/D3/bert_tweet/sub_models/model1_pred_output.csv results/D3/bert_tweet/sub_models/model1_metrics.txt --log-dir .logging/ --experiment-name model1 --experiment-version 0
