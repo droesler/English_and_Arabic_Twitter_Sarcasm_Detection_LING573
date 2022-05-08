@@ -72,13 +72,12 @@ LC_ALL=en_US.UTF-8 python src/model_runner.py convert /home2/droesl/573/7070rand
 LC_ALL=en_US.UTF-8 python src/model_runner.py test data/balanced_validation_En.csv outputs/D3/bert_tweet/sub_models/model5_pred_output.csv results/D3/bert_tweet/sub_models/model5_metrics.txt  --log-dir .logging/ --experiment-name model5 --experiment-version 0
 
 ```
-After output logits are produced by the five models, another script, `src/get_ensemble.predictions.py`, will collect the output logits from the five models and do majority voting to determine the final ensemble predictions.
-
-
+After output logits are produced by the five models, another script, `src/get_ensemble.predictions.py`, will collect the output logits from the five models and do majority voting to determine the final ensemble predictions.  
+     
 D3.sh outputs the following results and output files:
 
-- `results/D3/bert_tweet/metrics.txt` - the classification report for the ensemble
-- `outputs/D3/bert_tweet/pred_output.csv` - the majority vote predictions of the ensemble
+- `results/D3/bert_tweet/model_results.txt` - the classification report for the ensemble
+- `outputs/D3/bert_tweet/model_output.txt` - the majority vote predictions of the ensemble
 
 For each of the five models in the ensemble, sub-predictions and sub-scores can be found in 
 
