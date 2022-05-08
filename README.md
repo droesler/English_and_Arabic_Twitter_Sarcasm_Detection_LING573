@@ -16,7 +16,7 @@
 git clone https://github.com/amy17519/ling573-2022-spring.git
 ```
 
-2. We use conda to manage our dev environment. To rerun our evaluation script, you can run the following command to set up the environment first:
+2. We have made changes to our conda environment since D2. Please remove any previously created 'ling573-2022-spring' environment and run the following command to re-build the updated environment:
 
 ```
 conda env create -f src/environment.yml
@@ -28,8 +28,7 @@ conda env create -f src/environment.yml
 chmod +x D3.sh
 ```
 
-4. After the conda environment is activated and you have the right permission for `D3.sh`, you can run the `D3.sh` file to replicate all the steps for both baseline models and BertTweet model.
-
+4. After the conda environment is activated and you have the right permission for `D3.sh`, you can run the `D3.sh` file to perform predictions using our D3 model.
 ```
 bash D3.sh
 ```
