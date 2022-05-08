@@ -7,4 +7,6 @@ log        = D3.log
 notification = complete
 transfer_executable = false
 request_memory = 2*1024
+Requirements = (Machine == "patas-gn3.ling.washington.edu")
+request_GPUs = 1
 queue
