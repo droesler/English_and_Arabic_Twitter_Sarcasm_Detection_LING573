@@ -17,7 +17,7 @@ from torch.nn import functional as F
 from torch.utils.data import DataLoader, TensorDataset
 from transformers.optimization import AdamW, get_linear_schedule_with_warmup
 from torchmetrics import MetricCollection, Accuracy, Precision, Recall, AUROC, F1Score
-from models import BertClassifier, BertSmallClassifier, BertweetLargeClassifier
+from models import BertClassifier, BertSmallClassifier, BertweetLargeClassifier, ArbertClassifier, CamelbertMixClassifier
 from sklearn.metrics import classification_report
 
 

@@ -6,7 +6,7 @@ from nltk.tokenize import TweetTokenizer
 from emoji import demojize
 
 from functools import partial
-from transformers import AutoModel, AutoTokenizer
+from transformers import AutoModel, AutoTokenizer, AutoModelForMaskedLM
 
 MAX_LEN = 100
 
@@ -322,3 +322,137 @@ class BertweetLargeClassifier(nn.Module):
     def get_preprocessor():
         tokenizer = AutoTokenizer.from_pretrained("vinai/bertweet-large", normalization=False, use_fast=False)
         return partial(preprocessing_for_bertweetlarge, tokenizer)
+
+
+class CamelbertMixClassifier(nn.Module):
+    """CamelbertMix Model for Classification Tasks in Modern Arabic.
+    Added for adaptation
+    """
+
+    def __init__(self, freeze_bert=False):
+        """
+        @param    bert: a BertModel object
+        @param    classifier: a torch.nn.Module classifier
+        @param    freeze_bert (bool): Set `False` to fine-tune the BERT model
+        """
+        super(CamelbertMixClassifier, self).__init__()
+        # Specify hidden size of BERT, hidden size of our classifier, and number of labels
+        D_in, H, D_out = 30000, 50, 2
+
+        # Instantiate BERT model
+        # self.bert = RobertaModel.from_pretrained('roberta-base')
+        # self.bert = BertModel.from_pretrained('bert-base-cased')
+        self.bert = AutoModelForMaskedLM.from_pretrained("CAMeL-Lab/bert-base-arabic-camelbert-mix")
+
+        # Instantiate an one-layer feed-forward classifier
+        self.classifier = nn.Sequential(
+            nn.Linear(D_in, H),
+            nn.ReLU(),
+            nn.Dropout(0.33),
+            nn.Linear(H, D_out)
+        )
+
+        # Freeze the BERT model
+        if freeze_bert:
+            for param in self.bert.parameters():
+                param.requires_grad = False
+
+    def forward(self, input_ids, attention_mask):
+        """
+        Feed input to BERT and the classifier to compute logits.
+        @param    input_ids (torch.Tensor): an input tensor with shape (batch_size,
+                      max_length)
+        @param    attention_mask (torch.Tensor): a tensor that hold attention mask
+                      information with shape (batch_size, max_length)
+        @return   logits (torch.Tensor): an output tensor with shape (batch_size,
+                      num_labels)
+        """
+        # Feed input to BERT
+        outputs = self.bert(input_ids=input_ids,
+                            attention_mask=attention_mask)
+
+        # Extract the last hidden state of the token `[CLS]` for classification task
+        last_hidden_state_cls = outputs[0][:, 0, :]
+
+        # Feed input to classifier to compute logits
+        logits = self.classifier(last_hidden_state_cls)
+
+        return logits
+
+    @staticmethod
+    def get_preprocessor():
+        os.environ['TOKENIZERS_PARALLELISM'] = 'false'
+        tokenizer = AutoTokenizer.from_pretrained("CAMeL-Lab/bert-base-arabic-camelbert-mix", normalization=True, is_fast=False)
+        return partial(preprocessing_for_bert, tokenizer)
+
+
+class ArbertClassifier(nn.Module):
+    """Arbert Model for Classification Tasks in Modern Arabic.
+   Added for adaptation
+   """
+
+    def __init__(self, freeze_bert=False):
+        """
+        @param    bert: a BertModel object
+        @param    classifier: a torch.nn.Module classifier
+        @param    freeze_bert (bool): Set `False` to fine-tune the BERT model
+        """
+        super(ArbertClassifier, self).__init__()
+        # Specify hidden size of BERT, hidden size of our classifier, and number of labels
+        D_in, H1, H2, H3, H4, D_out = 100000, 25000, 2000, 250, 50, 2
+
+        # Instantiate BERT model
+        # self.bert = RobertaModel.from_pretrained('roberta-base')
+        # self.bert = BertModel.from_pretrained('bert-base-cased')
+        self.bert = AutoModelForMaskedLM.from_pretrained("UBC-NLP/ARBERT")
+
+        # Instantiate an one-layer feed-forward classifier
+        self.classifier = nn.Sequential(
+            #nn.Linear(D_in, H1),
+            nn.Linear(D_in, H4),
+            nn.ReLU(),
+            nn.Dropout(0.33),
+            #nn.Linear(H1, H2),
+           # nn.ReLU(),
+            #nn.Dropout(0.33),
+            #nn.Linear(H2, H3),
+            #nn.ReLU(),
+            #nn.Dropout(0.33),
+            #nn.Linear(H3, H4),
+            #nn.ReLU(),
+            #nn.Dropout(0.33),
+            nn.Linear(H4, D_out)
+        )
+
+        # Freeze the BERT model
+        if freeze_bert:
+            for param in self.bert.parameters():
+                param.requires_grad = False
+
+    def forward(self, input_ids, attention_mask):
+        """
+        Feed input to BERT and the classifier to compute logits.
+        @param    input_ids (torch.Tensor): an input tensor with shape (batch_size,
+                      max_length)
+        @param    attention_mask (torch.Tensor): a tensor that hold attention mask
+                      information with shape (batch_size, max_length)
+        @return   logits (torch.Tensor): an output tensor with shape (batch_size,
+                      num_labels)
+        """
+        # Feed input to BERT
+        outputs = self.bert(input_ids=input_ids,
+                            attention_mask=attention_mask)
+
+        # Extract the last hidden state of the token `[CLS]` for classification task
+        last_hidden_state_cls = outputs[0][:, 0, :]
+
+        # Feed input to classifier to compute logits
+        logits = self.classifier(last_hidden_state_cls)
+
+        return logits
+
+    @staticmethod
+    def get_preprocessor():
+        os.environ['TOKENIZERS_PARALLELISM'] = 'false'
+        tokenizer = AutoTokenizer.from_pretrained("UBC-NLP/ARBERT", normalization=True, is_fast=False)
+        return partial(preprocessing_for_bert, tokenizer)
