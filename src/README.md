@@ -93,6 +93,17 @@ tensorboard --logdir=ling573-2022-spring/.logging/
 ```
 The `--logdir` directory should be the same as the one provided to the `--log-dir` option of model_runner.py.
 
+To connect to the remote tensorboard on dryas:
+
+```
+ssh -L 6006:localhost:6006 yourusername@dryas.ling.washington.edu
+```
+Once you have ssh-ed, type into your browser bar:
+
+```
+localhost:6006
+```
+
 ## Testing and Inference
 The `test` and `predict` are used for running the model outside of the training/validation loop. These modes will put
 the model into the `eval()` state and turn off tracking of gradients for efficient scoring. For both of these modes you 
@@ -132,7 +143,7 @@ When adding new models to model runner, make sure to do the following:
 # Notes
 05/02) Addition of train.cmd, and train.sh
 
-In train.sh, logging goes into shared folder on patas; some additional steps need to be added to access the tensorboard (port 6066)
+In train.sh, logging goes into shared folder on patas; some additional steps need to be added to access the tensorboard (port 6006)
 
 For train.cmd, requests gpu. Occasionally runs into error where it claims "no gpu available" although it has been assigned a gpu. May be an issue with a specific machine.
 
@@ -142,3 +153,7 @@ Changes to model_runner.py:
 3) Learning rate logging wasn't working, changed to pytorch lightning logger.
 4) np.mean doesn't work on gpus, changed to torch.mean
 5) Changed metrics, take out macro.
+
+05/13) models.py, addition of ArbertClassifier and CamelbertMixClassifier
+
+runner_config.json, train.cmd, train.sh configurations edited for CamelbertMixClassifier
