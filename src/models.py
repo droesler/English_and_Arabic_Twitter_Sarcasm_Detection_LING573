@@ -329,7 +329,7 @@ class CamelbertMixClassifier(nn.Module):
     Added for adaptation
     """
 
-    def __init__(self, freeze_bert=False):
+    def __init__(self, freeze_bert=False, dropout=0.33):
         """
         @param    bert: a BertModel object
         @param    classifier: a torch.nn.Module classifier
@@ -337,18 +337,18 @@ class CamelbertMixClassifier(nn.Module):
         """
         super(CamelbertMixClassifier, self).__init__()
         # Specify hidden size of BERT, hidden size of our classifier, and number of labels
-        D_in, H, D_out = 30000, 50, 2
+        D_in, H, D_out = 768, 50, 2
 
         # Instantiate BERT model
         # self.bert = RobertaModel.from_pretrained('roberta-base')
         # self.bert = BertModel.from_pretrained('bert-base-cased')
-        self.bert = AutoModelForMaskedLM.from_pretrained("CAMeL-Lab/bert-base-arabic-camelbert-mix")
+        self.bert = AutoModel.from_pretrained("CAMeL-Lab/bert-base-arabic-camelbert-mix")
 
         # Instantiate an one-layer feed-forward classifier
         self.classifier = nn.Sequential(
             nn.Linear(D_in, H),
             nn.ReLU(),
-            nn.Dropout(0.33),
+            nn.Dropout(dropout),
             nn.Linear(H, D_out)
         )
 
@@ -399,29 +399,20 @@ class ArbertClassifier(nn.Module):
         """
         super(ArbertClassifier, self).__init__()
         # Specify hidden size of BERT, hidden size of our classifier, and number of labels
-        D_in, H1, H2, H3, H4, D_out = 100000, 25000, 2000, 250, 50, 2
+        D_in, H, D_out = 768, 50, 2
 
         # Instantiate BERT model
         # self.bert = RobertaModel.from_pretrained('roberta-base')
         # self.bert = BertModel.from_pretrained('bert-base-cased')
-        self.bert = AutoModelForMaskedLM.from_pretrained("UBC-NLP/ARBERT")
+        self.bert = AutoModel.from_pretrained("UBC-NLP/ARBERT")
 
         # Instantiate an one-layer feed-forward classifier
         self.classifier = nn.Sequential(
             #nn.Linear(D_in, H1),
-            nn.Linear(D_in, H4),
+            nn.Linear(D_in, H),
             nn.ReLU(),
             nn.Dropout(0.33),
-            #nn.Linear(H1, H2),
-           # nn.ReLU(),
-            #nn.Dropout(0.33),
-            #nn.Linear(H2, H3),
-            #nn.ReLU(),
-            #nn.Dropout(0.33),
-            #nn.Linear(H3, H4),
-            #nn.ReLU(),
-            #nn.Dropout(0.33),
-            nn.Linear(H4, D_out)
+            nn.Linear(H, D_out)
         )
 
         # Freeze the BERT model
