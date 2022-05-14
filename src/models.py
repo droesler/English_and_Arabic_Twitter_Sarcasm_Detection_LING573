@@ -6,7 +6,7 @@ from nltk.tokenize import TweetTokenizer
 from emoji import demojize
 
 from functools import partial
-from transformers import AutoModel, AutoTokenizer, AutoModelForMaskedLM
+from transformers import AutoModel, AutoTokenizer
 
 MAX_LEN = 100
 
@@ -392,34 +392,39 @@ class CamelbertMixClassifier(nn.Module):
         return partial(preprocessing_for_bert, tokenizer)
 
 
-class ArbertClassifier(nn.Module):
-    """Arbert Model for Classification Tasks in Modern Arabic.
+class MarbertClassifier(nn.Module):
+    """Marbert Model for Classification Tasks in Modern Arabic.
    Added for adaptation
    """
 
-    def __init__(self, freeze_bert=False):
+    def __init__(self, freeze_bert=False, dropout=0.33, hidden_layers=tuple([50])):
         """
         @param    bert: a BertModel object
         @param    classifier: a torch.nn.Module classifier
         @param    freeze_bert (bool): Set `False` to fine-tune the BERT model
         """
-        super(ArbertClassifier, self).__init__()
+        super(MarbertClassifier, self).__init__()
         # Specify hidden size of BERT, hidden size of our classifier, and number of labels
-        D_in, H, D_out = 768, 50, 2
+        D_in, D_out = 768, 2
 
         # Instantiate BERT model
         # self.bert = RobertaModel.from_pretrained('roberta-base')
         # self.bert = BertModel.from_pretrained('bert-base-cased')
-        self.bert = AutoModel.from_pretrained("UBC-NLP/ARBERT")
+        self.bert = AutoModel.from_pretrained("UBC-NLP/MARBERT")
 
-        # Instantiate an one-layer feed-forward classifier
-        self.classifier = nn.Sequential(
-            #nn.Linear(D_in, H1),
-            nn.Linear(D_in, H),
-            nn.ReLU(),
-            nn.Dropout(0.33),
-            nn.Linear(H, D_out)
-        )
+        layers = []
+        for i in range(len(hidden_layers)):
+            if i == 0:
+                layers += [nn.Linear(D_in, hidden_layers[i]), nn.ReLU(), nn.Dropout(dropout)]
+
+            if 0 < i < len(hidden_layers):
+                layers += [nn.Linear(hidden_layers[i-1], hidden_layers[i]), nn.ReLU(), nn.Dropout(dropout)]
+
+            if i == len(hidden_layers) - 1:
+                layers += [nn.Linear(hidden_layers[i], D_out)]
+
+        # Instantiate a feed-forward classifier
+        self.classifier = nn.Sequential(*layers)
 
         # Freeze the BERT model
         if freeze_bert:
@@ -451,5 +456,5 @@ class ArbertClassifier(nn.Module):
     @staticmethod
     def get_preprocessor():
         os.environ['TOKENIZERS_PARALLELISM'] = 'false'
-        tokenizer = AutoTokenizer.from_pretrained("UBC-NLP/ARBERT", normalization=True, is_fast=False)
+        tokenizer = AutoTokenizer.from_pretrained("UBC-NLP/MARBERT", normalization=True, is_fast=False)
         return partial(preprocessing_for_bert, tokenizer)

@@ -147,13 +147,6 @@ In train.sh, logging goes into shared folder on patas; some additional steps nee
 
 For train.cmd, requests gpu. Occasionally runs into error where it claims "no gpu available" although it has been assigned a gpu. May be an issue with a specific machine.
 
-Changes to model_runner.py:
-1) Calculates number of training steps over a period
-2) Changed scheduler to  David's scheduler
-3) Learning rate logging wasn't working, changed to pytorch lightning logger.
-4) np.mean doesn't work on gpus, changed to torch.mean
-5) Changed metrics, take out macro.
+05/13) models.py, addition of MarbertClassifier and CamelbertMixClassifier for Adaptation task
 
-05/13) models.py, addition of ArbertClassifier and CamelbertMixClassifier
-
-runner_config.json, train.cmd, train.sh configurations edited for CamelbertMixClassifier
+runner_config.json, addition of changeable model_params (e.g. dropout, freeze_bert, hidden_layers)
