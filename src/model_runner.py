@@ -1,7 +1,9 @@
 import argparse
 import os
+import copy
 import sys
 import json
+import inspect
 import numpy as np
 import pandas as pd
 import torch
@@ -78,7 +80,7 @@ class DataRetriever:
 class LightningSystem(LightningModule):
     def __init__(self, train_file=None, val_file=None, pred_file=None, test_file=None, random_state=None,
                  model_class=BertClassifier, train_size=0.8, batch_size=32, scheduler_mult=1, learning_rate=0.001,
-                 warm_restart=1, num_workers=1, **kwargs):
+                 warm_restart=1, num_workers=1, model_params=None, **kwargs):
         super().__init__()
 
         # apply random seed to torch and numpy
@@ -86,7 +88,7 @@ class LightningSystem(LightningModule):
             seed_everything(seed=random_state, workers=True)
 
         self.num_workers = num_workers
-        self.save_hyperparameters(ignore=["num_workers"])
+        self.save_hyperparameters(ignore=["num_workers"] + list(kwargs.keys()))
         self.data_retriever = DataRetriever(
             'sarcastic',
             train_file=train_file,
@@ -107,7 +109,13 @@ class LightningSystem(LightningModule):
         self.test_metrics = metrics.clone(prefix='test_')
 
         # Get the class constructor from command line options and initialize
-        self.model = globals()[model_class]()
+        model_class = globals()[model_class]
+        # model_params are probably best set in the runner_config.json. Having CLI flags for model_params could get pretty
+        # messy.
+        if model_params is None:
+            self.model = model_class()
+        else:
+            self.model = model_class(**model_params)
         self.preprocessor = self.model.get_preprocessor()
 
     def train_dataloader(self):
