@@ -36,7 +36,7 @@ def get_predictions(model_filepaths: list, labels: pd.Series) -> np.array:
   # get voting results where 3 or more votes is deciding
   voted_preds = np.where(total_preds >= 3, 1, 0)
 
-return voted_preds
+  return voted_preds
 
 
 def get_preds_from_logits(output: pd.DataFrame, labels: pd.Series) -> np.array:
