@@ -15,7 +15,7 @@ from sklearn.metrics import classification_report
 from sklearn.metrics import precision_recall_curve
 
 
-def get_predictions(model_filepaths: list, labels: pd.Series) -> np.array:
+def get_predictions(model_filepaths: list, model_result_filepaths: list, labels: pd.Series) -> np.array:
   """ 
   Gets voted ensemble predictions.
   """ 
@@ -27,8 +27,8 @@ def get_predictions(model_filepaths: list, labels: pd.Series) -> np.array:
 
   # call function to get predictions for each child model
   model_preds = []
-  for output in outputs:
-    model_preds.append(get_preds_from_logits(output, labels))
+  for output, results_path in zip(outputs, model_result_filepaths):
+    model_preds.append(get_preds_from_logits(output, results_path, labels))
 
   # sum all predictions
   total_preds = np.sum(model_preds, axis=0)
@@ -39,7 +39,7 @@ def get_predictions(model_filepaths: list, labels: pd.Series) -> np.array:
   return voted_preds
 
 
-def get_preds_from_logits(output: pd.DataFrame, labels: pd.Series) -> np.array:
+def get_preds_from_logits(output: pd.DataFrame, results_paths: str, labels: pd.Series) -> np.array:
   """ 
   Gets predictions from each child model of the ensemble. 
   Called by get_predictions.
@@ -68,6 +68,10 @@ def get_preds_from_logits(output: pd.DataFrame, labels: pd.Series) -> np.array:
 
   model_preds = np.where(model_probs[:, 1] >= best_threshold, 1, 0)
 
+  # update sub-model results file with thresholded version of predictions
+  with open(results_paths, mode="w", newline="\n", encoding="utf-8") as results_file:
+      results_file.write(classification_report(labels, model_preds))
+
   return model_preds
 
 
@@ -90,6 +94,18 @@ if __name__ == '__main__':
   model4_test_out_path = "outputs/D4/primary/evaltest/sub_models/model4_pred_output.csv"
   model5_test_out_path = "outputs/D4/primary/evaltest/sub_models/model5_pred_output.csv"
 
+  model1_val_result_path = "results/D4/primary/devtest/sub_models/model1_pred_output.csv"
+  model2_val_result_path = "results/D4/primary/devtest/sub_models/model2_pred_output.csv"
+  model3_val_result_path = "results/D4/primary/devtest/sub_models/model3_pred_output.csv"
+  model4_val_result_path = "results/D4/primary/devtest/sub_models/model4_pred_output.csv"
+  model5_val_result_path = "results/D4/primary/devtest/sub_models/model5_pred_output.csv"
+
+  model1_test_result_path = "results/D4/primary/evaltest/sub_models/model1_pred_output.csv"
+  model2_test_result_path = "results/D4/primary/evaltest/sub_models/model2_pred_output.csv"
+  model3_test_result_path = "results/D4/primary/evaltest/sub_models/model3_pred_output.csv"
+  model4_test_result_path = "results/D4/primary/evaltest/sub_models/model4_pred_output.csv"
+  model5_test_result_path = "results/D4/primary/evaltest/sub_models/model5_pred_output.csv"
+
   val_outputs_path = "outputs/D4/primary/devtest/model_output.txt"
   val_results_path = "results/D4/primary/devtest/model_results.txt"
 
@@ -98,6 +114,8 @@ if __name__ == '__main__':
 
   val_out_filepaths = [model1_val_out_path, model2_val_out_path, model3_val_out_path, model4_val_out_path, model5_val_out_path]
   test_out_filepaths = [model1_test_out_path, model2_test_out_path, model3_test_out_path, model4_test_out_path, model5_test_out_path]
+  val_result_filepaths = [model1_val_result_path, model2_val_result_path, model3_val_result_path, model4_val_result_path, model5_val_result_path]
+  test_result_filepaths = [model1_test_result_path, model2_test_result_path, model3_test_result_path, model4_test_result_path, model5_test_result_path]
 
   # read the validation and test CSV files
 
@@ -111,8 +129,8 @@ if __name__ == '__main__':
 
   # call prediction function to get ensemble voted predictions
 
-  val_voted_preds = get_predictions(val_out_filepaths, y_val)
-  test_voted_preds = get_predictions(test_out_filepaths, y_test)
+  val_voted_preds = get_predictions(val_out_filepaths, val_result_filepaths, y_val)
+  test_voted_preds = get_predictions(test_out_filepaths, test_result_filepaths, y_test)
 
   # write outputs and results to files
 
