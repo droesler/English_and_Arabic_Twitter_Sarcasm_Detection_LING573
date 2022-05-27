@@ -18,7 +18,7 @@ def get_predictions(model_filepath: str, model_result_filepath: str, labels: pd.
   """ 
 
   # get outputs from each child model
-  outputs = pd.read_csv(filepath)
+  outputs = pd.read_csv(model_filepath)
 
   # call function to get predictions for each child model
   model_preds = get_preds_from_logits(outputs, model_result_filepath, labels)
