@@ -72,7 +72,7 @@ if __name__ == '__main__':
   model2_val_out_path = "outputs/D4/primary/devtest/sub_models/model2_pred_output.csv"
   model2_test_out_path = "outputs/D4/primary/evaltest/sub_models/model2_pred_output.csv"
   model2_val_result_path = "results/D4/primary/devtest/sub_models/model2_metrics.txt"
-  model2_test_result_path = "results/D4/primary/evaltest/sub_models/model2__metrics.txt"
+  model2_test_result_path = "results/D4/primary/evaltest/sub_models/model2_metrics.txt"
 
   val_outputs_path = "outputs/D4/primary/devtest/model_output.txt"
   val_results_path = "results/D4/primary/devtest/model_results.txt"
