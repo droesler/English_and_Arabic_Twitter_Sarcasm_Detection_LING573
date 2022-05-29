@@ -75,11 +75,20 @@ The notebooks used to fine-tune the BERTweet models on colab can be found in:
 
 ## Adaptation task:
 
+Our Adaptation Task model is a fine-tuned CAMeLBERT-Mix model.
+
+The CAMeLBERT-Mix model is saved in the following location on Patas:
+`/home2/diazhang/LING573/logging/`  
+
+The version in D4 is version_1
+
+We have set the permissions for the saved model to be accessible to graders.
+
 The D4.sh script will also perform predictions on both the dev and test sets using our adaptation model and will produce the following results and output files:
 
-- `results/D4/adaptation/devtest/model_results.txt` - the classification report for the adaptation model on the development set
-- `results/D4/adaptation/evaltest/model_results.txt` - the classification report for the adaptation model on the test set
-- `outputs/D4/adaptation/devtest/model_output.txt` - the predictions of the adaptation model on the development set
-- `outputs/D4/adaptation/devtest/model_output.txt` - the predictions of the adaptation model on the test set
+- `results/D4/adaptation/devtest/ar_metrics.txt` - the classification report for the adaptation model on the development set
+- `results/D4/adaptation/evaltest/ar_metrics.txt` - the classification report for the adaptation model on the test set
+- `outputs/D4/adaptation/devtest/ar_pred_output.csv` - the predictions of the adaptation model on the development set
+- `outputs/D4/adaptation/devtest/ar_pred_output.csv` - the predictions of the adaptation model on the test set
 
 
