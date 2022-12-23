@@ -1,7 +1,8 @@
 # English and Arabic Sarcasm Detection in Tweets
 Group project for University of Washington LING573 NLP Systems and Applications Spring 2022
 
-[Paper](https://github.com/droesler/English_and_Arabic_Twitter_Sarcasm_Detection_LING573/blob/main/doc/English%20and%20Arabic%20Sarcasm%20Detection%20in%20Tweets%20(paper).pdf) and [slides](https://github.com/droesler/English_and_Arabic_Twitter_Sarcasm_Detection_LING573/blob/main/doc/English%20and%20Arabic%20Sarcasm%20Detection%20in%20Tweets%20(slides).pdf) for the project.
+We build English and Arabic Sarcasm Detection systems using the Twitter sarcasm dataset of SemEval 2022 Task 6, iSarcasmEval ([Oprea and Magdy, 2020](https://aclanthology.org/2022.semeval-1.111.pdf)). Our system outperforms the top scoring submission for the English portion of the task.  
+- Our [paper](https://github.com/droesler/English_and_Arabic_Twitter_Sarcasm_Detection_LING573/blob/main/doc/English%20and%20Arabic%20Sarcasm%20Detection%20in%20Tweets%20(paper).pdf) and [slides](https://github.com/droesler/English_and_Arabic_Twitter_Sarcasm_Detection_LING573/blob/main/doc/English%20and%20Arabic%20Sarcasm%20Detection%20in%20Tweets%20(slides).pdf) for the project.
 
 ## Team
 
