@@ -1,4 +1,5 @@
-# ling573-2022-spring
+# English and Arabic Sarcasm Detection in Tweets
+Group project for University of Washington LING573 NLP Systems and Applications Spring 2022
 
 
 ## Team
