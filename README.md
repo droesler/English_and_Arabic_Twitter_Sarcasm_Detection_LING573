@@ -1,6 +1,7 @@
 # English and Arabic Sarcasm Detection in Tweets
 Group project for University of Washington LING573 NLP Systems and Applications Spring 2022
 
+[Paper](https://github.com/droesler/English_and_Arabic_Twitter_Sarcasm_Detection_LING573/blob/main/doc/English%20and%20Arabic%20Sarcasm%20Detection%20in%20Tweets%20(paper).pdf) and [slides](https://github.com/droesler/English_and_Arabic_Twitter_Sarcasm_Detection_LING573/blob/main/doc/English%20and%20Arabic%20Sarcasm%20Detection%20in%20Tweets%20(slides).pdf) for the project.
 
 ## Team
 
@@ -9,7 +10,7 @@ Group project for University of Washington LING573 NLP Systems and Applications 
 - Diana Baumgartner-Zhang @Diana-BZ
 - Juliana McCausland @ju-mc
 
-## How to Replicate D4 Results
+## Instructions for running models on University of Washington's Patas/Dryas Linux cluster:
 
 1. First, clone the project repo at https://github.com/amy17519/ling573-2022-spring.git
 
