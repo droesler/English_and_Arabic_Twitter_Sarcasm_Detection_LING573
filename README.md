@@ -13,10 +13,10 @@ We build English and Arabic Sarcasm Detection systems using the Twitter sarcasm 
 
 ## Instructions for running models on University of Washington's Patas/Dryas Linux cluster:
 
-1. First, clone the project repo at https://github.com/amy17519/ling573-2022-spring.git
+1. First, clone the project repo at https://github.com/droesler/English_and_Arabic_Twitter_Sarcasm_Detection_LING573.git  
 
 ```
-git clone https://github.com/amy17519/ling573-2022-spring.git
+git clone https://github.com/droesler/English_and_Arabic_Twitter_Sarcasm_Detection_LING573.git
 ```
 
 2. Please remove any previously created 'ling573-2022-spring' environment and run the following command to re-build the updated environment:
